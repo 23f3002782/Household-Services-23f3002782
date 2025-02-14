@@ -110,7 +110,7 @@ class ServiceProfessionalProfile(db.Model):
     
     service_id = db.Column(db.Integer, db.ForeignKey('service.id'), nullable=False)
     
-    description = db.Column(db.Text, nullable=True)
+    about = db.Column(db.Text, nullable=True)
     experience_years = db.Column(db.Integer, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     

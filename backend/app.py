@@ -4,6 +4,7 @@ from application.models import User, Role
 from application.config import LocalDevelopmentConfig
 from flask_security import Security, SQLAlchemyUserDatastore
 from flask_security import hash_password
+from flask_restful import Api
 
 def create_app():
     app = Flask(__name__)
@@ -15,6 +16,7 @@ def create_app():
     return app
 
 app = create_app()
+api = Api(app)
 
 with app.app_context():
     db.create_all()
@@ -43,8 +45,10 @@ with app.app_context():
 
     db.session.commit()
 
-
 from application.routes import *
+
+from application.resources import register_resources
+register_resources(api)
 
 if __name__ == "__main__":
     app.run()
