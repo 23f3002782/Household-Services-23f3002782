@@ -1,14 +1,20 @@
 from flask_restful import Resource, reqparse
 from .models import *
-from flask_security import auth_required, roles_required, hash_password
+from flask_security import auth_required, roles_required, roles_accepted, hash_password
 from flask import request, jsonify
 from flask import current_app as app
+from flask_security import current_user
+from datetime import datetime
 
 def register_resources(api):
     api.add_resource(CustomerSignupResource, '/api/signup/customer')
     api.add_resource(ServiceProfessionalSignupResource, '/api/signup/service_professional')
     api.add_resource(ServiceListResource, '/api/services')
     api.add_resource(ServiceResource, '/api/services/<int:service_id>')
+    api.add_resource(ServiceRequestListResource, '/api/service-requests')
+    api.add_resource(ServiceRequestResource, '/api/service-requests/<int:request_id>')
+    api.add_resource(UserServiceRequestsResource, '/api/users/me/service-requests')
+    api.add_resource(ProfessionalServiceRequestsResource, '/api/professionals/me/service-requests')
     
 # Use http://127.0.0.1:5000/login?include_auth_token for login
   
@@ -93,7 +99,7 @@ class ServiceListResource(Resource):
         self.parser.add_argument('description', type=str)
 
     def get(self):
-        """Get all services"""
+        # Anyone can view services, no auth needed
         services = Service.query.all()
         return jsonify([{
             'id': service.id,
@@ -103,11 +109,11 @@ class ServiceListResource(Resource):
             'description': service.description
         } for service in services])
 
+    @auth_required('token')
+    @roles_required('admin')
     def post(self):
-        """Create a new service"""
         args = self.parser.parse_args()
         
-        # Check if service with same name already exists
         if Service.query.filter_by(name=args['name']).first():
             return {'message': 'Service with this name already exists'}, 400
         
@@ -138,7 +144,6 @@ class ServiceResource(Resource):
         self.parser.add_argument('description', type=str)
 
     def get(self, service_id):
-        """Get a specific service"""
         service = Service.query.get_or_404(service_id)
         return {
             'id': service.id,
@@ -148,14 +153,13 @@ class ServiceResource(Resource):
             'description': service.description
         }
 
+    @auth_required('token')
+    @roles_required('admin')
     def put(self, service_id):
-        """Update a specific service"""
         service = Service.query.get_or_404(service_id)
         args = self.parser.parse_args()
         
-        # Update only provided fields
         if args['name']:
-            # Check if new name conflicts with existing service (excluding current service)
             existing = Service.query.filter(Service.name == args['name'], Service.id != service_id).first()
             if existing:
                 return {'message': 'Service with this name already exists'}, 400
@@ -178,9 +182,112 @@ class ServiceResource(Resource):
             'description': service.description
         }
 
+    @auth_required('token')
+    @roles_required('admin')
     def delete(self, service_id):
-        """Delete a specific service"""
         service = Service.query.get_or_404(service_id)
         db.session.delete(service)
         db.session.commit()
-        return '', 204
+        return {'message': 'Service deleted successfully'}, 204
+
+class ServiceRequestListResource(Resource):
+    @auth_required('token')
+    @roles_accepted('admin', 'customer', 'service_professional')  
+    def get(self):
+        requests = ServiceRequest.query.all()
+        return jsonify([{
+            'id': req.id,
+            'service_id': req.service_id,
+            'customer_id': req.customer_id,
+            'professional_id': req.professional_id,
+            'status': req.status,
+            'date_of_request': req.date_of_request.isoformat(),
+            'date_of_completion': req.date_of_completion.isoformat() if req.date_of_completion else None,
+            'review': req.review
+        } for req in requests])
+
+    @auth_required('token')
+    @roles_required('customer')
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('service_id', type=int, required=True)
+        args = parser.parse_args()
+        
+        request = ServiceRequest(
+            service_id=args['service_id'],
+            customer_id=current_user.id, 
+            status='requested'
+        )
+        db.session.add(request)
+        db.session.commit()
+        return {'message': 'Service request created successfully'}, 201
+
+class ServiceRequestResource(Resource):
+    @auth_required('token')
+    @roles_accepted('admin', 'customer', 'service_professional')
+    def get(self, request_id):
+        request = ServiceRequest.query.get_or_404(request_id)
+        return {
+            'id': request.id,
+            'service_id': request.service_id,
+            'customer_id': request.customer_id,
+            'professional_id': request.professional_id,
+            'status': request.status,
+            'date_of_request': request.date_of_request.isoformat(),
+            'date_of_completion': request.date_of_completion.isoformat() if request.date_of_completion else None,
+            'review': request.review
+        }
+
+    @auth_required('token')
+    @roles_accepted('admin', 'service_professional')
+    def put(self, request_id):
+        parser = reqparse.RequestParser()
+        parser.add_argument('status', type=str)
+        parser.add_argument('professional_id', type=int)
+        parser.add_argument('review', type=str)
+        parser.add_argument('date_of_completion', type=str)
+        args = parser.parse_args()
+
+        request = ServiceRequest.query.get_or_404(request_id)
+        
+        if args['status']:
+            request.status = args['status']
+        if args['professional_id']:
+            request.professional_id = args['professional_id']
+        if args['review']:
+            request.review = args['review']
+        if args['date_of_completion']:
+            request.date_of_completion = datetime.fromisoformat(args['date_of_completion'])
+
+        db.session.commit()
+        return {'message': 'Service request updated successfully'}
+
+class UserServiceRequestsResource(Resource):
+    @auth_required('token')
+    @roles_required('customer')
+    def get(self):
+        requests = ServiceRequest.query.filter_by(customer_id=current_user.id).all()
+        return jsonify([{
+            'id': req.id,
+            'service_id': req.service_id,
+            'status': req.status,
+            'professional_id': req.professional_id,
+            'date_of_request': req.date_of_request.isoformat(),
+            'date_of_completion': req.date_of_completion.isoformat() if req.date_of_completion else None,
+            'review': req.review
+        } for req in requests])
+
+class ProfessionalServiceRequestsResource(Resource):
+    @auth_required('token')
+    @roles_required('service_professional')
+    def get(self):
+        requests = ServiceRequest.query.filter_by(professional_id=current_user.id).all()
+        return jsonify([{
+            'id': req.id,
+            'service_id': req.service_id,
+            'customer_id': req.customer_id,
+            'status': req.status,
+            'date_of_request': req.date_of_request.isoformat(),
+            'date_of_completion': req.date_of_completion.isoformat() if req.date_of_completion else None,
+            'review': req.review
+        } for req in requests])
