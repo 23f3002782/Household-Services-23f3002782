@@ -36,11 +36,14 @@ with app.app_context():
         app.security.datastore.create_user(email = "sp1@user.com",
                                            username = "Sp1",
                                            password = hash_password("1234"),
+                                           experience_years = 10,
+                                           about = "I am a service professional. I have 10 years of experience in the field. I am very good at my job.",
                                            roles = ['service_professional'])
     if not app.security.datastore.find_user(email="cus1@user.com"):
         app.security.datastore.create_user(email="cus1@user.com",
                                         username="Cus1",
                                          password=hash_password("1234"),
+                                         address="3/456, Sector-A, Vikas Nagar",
                                          roles=['customer'])
 
     db.session.commit()

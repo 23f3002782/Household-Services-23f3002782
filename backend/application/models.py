@@ -15,6 +15,13 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(255), nullable=False)
     fs_uniquifier = db.Column(db.String(255), unique=True, nullable=False)
     active = db.Column(db.Boolean, nullable=False, default=True)
+    address = db.Column(db.String(500), nullable=True)
+    
+    # Service Professional specific fields
+    service_id = db.Column(db.Integer, db.ForeignKey('service.id'), nullable=True)
+    about = db.Column(db.Text, nullable=True)
+    experience_years = db.Column(db.Integer, nullable=True)
+    professional_since = db.Column(db.DateTime, default=datetime.now(timezone.utc), nullable=True)
     
     # Many-to-many relationship to roles
     roles = db.relationship('Role', backref='bearer', secondary='users_roles')
@@ -33,12 +40,8 @@ class User(db.Model, UserMixin):
         foreign_keys='ServiceRequest.professional_id'
     )
     
-    # One-to-one relationship with service professional profile 
-    professional_profile = db.relationship(
-        'ServiceProfessionalProfile', 
-        backref='user', 
-        uselist=False
-    )
+    # Relationship with service (for professionals)
+    service = db.relationship('Service', backref='professionals')
 
 class Role(db.Model, RoleMixin):
     __tablename__ = 'role'
@@ -96,23 +99,5 @@ class ServiceRequest(db.Model):
     
     # Track status ('requested', 'assigned', 'closed')
     status = db.Column(db.String(50), nullable=False, default='requested')
-
-# ----------------------------------------------------
-# 4. Service Professional Profile Model
-# ----------------------------------------------------
-
-class ServiceProfessionalProfile(db.Model):
-    __tablename__ = 'service_professional_profile'
     
-    id = db.Column(db.Integer, primary_key=True)
-
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), unique=True, nullable=False)
-    
-    service_id = db.Column(db.Integer, db.ForeignKey('service.id'), nullable=False)
-    
-    about = db.Column(db.Text, nullable=True)
-    experience_years = db.Column(db.Integer, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
-    
-    # To access details of the service they offer.
-    service = db.relationship('Service', backref='professionals')
+    review = db.Column(db.Text, nullable=True)
