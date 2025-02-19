@@ -1,10 +1,10 @@
 from flask_restful import Resource, reqparse
 from .models import *
-from flask_security import auth_required, roles_required, roles_accepted, hash_password
+from flask_security import auth_required, roles_required, roles_accepted, hash_password, login_user,current_user, logout_user
 from flask import request, jsonify
 from flask import current_app as app
-from flask_security import current_user
 from datetime import datetime
+from flask_security.utils import verify_password
 
 def register_resources(api):
     api.add_resource(CustomerSignupResource, '/api/signup/customer')
@@ -15,8 +15,40 @@ def register_resources(api):
     api.add_resource(ServiceRequestResource, '/api/service-requests/<int:request_id>')
     api.add_resource(UserServiceRequestsResource, '/api/users/me/service-requests')
     api.add_resource(ProfessionalServiceRequestsResource, '/api/professionals/me/service-requests')
+    api.add_resource(LoginResource, '/api/login')
+    api.add_resource(LogoutResource, '/api/logout')
     
-# Use http://127.0.0.1:5000/login?include_auth_token for login
+class LoginResource(Resource):
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument('email', type=str, required=True, help='Email is required')
+        self.parser.add_argument('password', type=str, required=True, help='Password is required')
+
+    def post(self):
+        args = self.parser.parse_args()
+        user = app.security.datastore.find_user(email=args['email'])
+        
+        if not user:
+            return {"message": "Invalid email or password"}, 401
+            
+        if not verify_password(args['password'], user.password):
+            return {"message": "Invalid email or password"}, 401
+            
+        if not user.active:
+            return {"message": "Account is deactivated"}, 401
+        login_user(user)
+        auth_token = user.get_auth_token()
+        
+        return {
+            "message": "Login successful",
+            "token": auth_token,
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "username": user.username,
+                "roles": [role.name for role in user.roles]
+            }
+        }, 200
   
 class CustomerSignupResource(Resource):
     def __init__(self):
@@ -291,3 +323,9 @@ class ProfessionalServiceRequestsResource(Resource):
             'date_of_completion': req.date_of_completion.isoformat() if req.date_of_completion else None,
             'review': req.review
         } for req in requests])
+        
+class LogoutResource(Resource):
+    @auth_required('token')
+    def post(self):
+        logout_user()
+        return {"message": "Logged out successfully"}, 200
