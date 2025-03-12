@@ -15,6 +15,7 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(255), nullable=False)
     fs_uniquifier = db.Column(db.String(255), unique=True, nullable=False)
     active = db.Column(db.Boolean, nullable=False, default=True)
+    status = db.Column(db.String(255), nullable=True)
     address = db.Column(db.String(500), nullable=True)
     
     # Service Professional specific fields
