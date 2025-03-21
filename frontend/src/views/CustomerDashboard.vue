@@ -1,254 +1,516 @@
 <template>
-  <div class="dashboard-container">
-    <!-- Toggle Button for Mobile -->
-    <button 
-      class="btn btn-primary position-fixed d-lg-none sidebar-toggle" 
-      type="button" 
-      data-bs-toggle="offcanvas" 
-      data-bs-target="#sidebar" 
-      aria-controls="sidebar"
-    >
-    <span class="material-symbols-outlined">
-menu
-</span>
-    </button>
+  <div class="container py-5">
+    <!-- Dashboard Overview -->
+    <div v-if="$route.path === '/customer/dashboard'" class="pt-3">
+      <h1 class="mb-5 display-5">Dashboard</h1>
 
-    <!-- Sidebar -->
-    <div 
-      class="sidebar offcanvas-lg offcanvas-start" 
-      tabindex="-1" 
-      id="sidebar" 
-      aria-labelledby="sidebarLabel"
-    >
-      <div class="offcanvas-header d-lg-none">
-        <h5 class="offcanvas-title" id="sidebarLabel">Menu</h5>
-        <button 
-          type="button" 
-          class="btn-close" 
-          data-bs-dismiss="offcanvas" 
-          data-bs-target="#sidebar" 
-          aria-label="Close"
-        ></button>
+      <div
+        v-if="requestedBookings.length === 0 && assignedBookings.length === 0"
+      >
+        <h3 class="text-center">No bookings yet...</h3>
+        <p class="text-center">Request a service now.</p>
+        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+          <button
+            class="btn btn-outline-dark btn-sm"
+            @click="$router.push('/services')"
+          >
+            Click here
+          </button>
+        </div>
       </div>
-      
-      <div class="offcanvas-body p-0">
-        <div class="sidebar-header text-center py-4">
-          <div class="user-avatar mb-3">
-            <img 
-              src="https://via.placeholder.com/80" 
-              alt="User Avatar" 
-              class="rounded-circle"
-              width="80"
-              height="80"
+
+      <div v-else>
+        <div v-if="requestedBookings.length > 0">
+          <h3>Requested Bookings</h3>
+          <div class="table-responsive mt-4 mb-5">
+            <table
+              class="table text-center rounded-3 table-borderless overflow-hidden align-middle"
             >
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Service</th>
+                  <th>Date of Request</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(booking, index) in requestedBookings" :key="index">
+                  <td>{{ index + 1 }}</td>
+                  <td>{{ booking.service.name }}</td>
+                  <td>{{ booking.date_of_request.split("00:00:00")[0] }}</td>
+                  <td>
+                    <div
+                      class="d-grid gap-2 d-md-flex justify-content-md-center"
+                    >
+                      <button
+                        class="btn btn-outline-warning btn-sm"
+                        data-bs-toggle="modal"
+                        data-bs-target="#editBookingModal"
+                        @click="startEditingBooking(booking.id)"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        class="btn btn-outline-danger btn-sm"
+                        @click="deleteBooking(booking.id)"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-          <h6 class="mb-0">{{ authStore.user.username }}</h6>
-          <small class="text-muted">Customer</small>
         </div>
 
-        <ul class="nav flex-column">
-          <li class="nav-item">
-            <a 
-              class="nav-link" 
-              :class="{ active: currentView === 'overview' }"
-              @click="currentView = 'overview'"
-              href="#"
+        <div v-if="assignedBookings.length > 0">
+          <h3>Ongoing Bookings</h3>
+          <div class="table-responsive mt-4 mb-5">
+            <table
+              class="table text-center rounded-3 table-borderless overflow-hidden align-middle"
             >
-              <i class="bi bi-house-door me-2"></i>
-              Overview
-            </a>
-          </li>
-          <li class="nav-item">
-            <a 
-              class="nav-link" 
-              :class="{ active: currentView === 'bookings' }"
-              @click="currentView = 'bookings'"
-              href="#"
-            >
-              <i class="bi bi-calendar-check me-2"></i>
-              My Bookings
-            </a>
-          </li>
-          <li class="nav-item">
-            <a 
-              class="nav-link" 
-              :class="{ active: currentView === 'services' }"
-              @click="currentView = 'services'"
-              href="#"
-            >
-              <i class="bi bi-tools me-2"></i>
-              Services
-            </a>
-          </li>
-          <li class="nav-item">
-            <a 
-              class="nav-link" 
-              :class="{ active: currentView === 'profile' }"
-              @click="currentView = 'profile'"
-              href="#"
-            >
-              <i class="bi bi-person me-2"></i>
-              Profile
-            </a>
-          </li>
-          <li class="nav-item">
-            <a 
-              class="nav-link" 
-              :class="{ active: currentView === 'settings' }"
-              @click="currentView = 'settings'"
-              href="#"
-            >
-              <i class="bi bi-gear me-2"></i>
-              Settings
-            </a>
-          </li>
-        </ul>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Service</th>
+                  <th>Date of Service</th>
+                  <th>Professional</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(booking, index) in assignedBookings" :key="index">
+                  <td>{{ index + 1 }}</td>
+                  <td>{{ booking.service.name }}</td>
+                  <td>{{ booking.date_of_request.split("00:00:00")[0] }}</td>
+                  <td>
+                    <div
+                      class="d-grid gap-2 d-md-flex justify-content-md-center"
+                    >
+                      {{ booking.professional.username }}
+                      <button
+                        @click="
+                          $router.push(
+                            `/professionals/${booking.professional.id}`
+                          )
+                        "
+                        class="btn btn-outline-dark btn-sm"
+                      >
+                        View
+                      </button>
+                    </div>
+                  </td>
+                  <td>
+                    {{
+                      booking.status === "closed by professional"
+                        ? "Closed"
+                        : "Ongoing"
+                    }}
+                  </td>
+                  <td>
+                    <div
+                      class="d-grid gap-2 d-md-flex justify-content-md-center"
+                    >
+                      <!-- <button
+                        v-if="booking.status !== 'closed_by_professional'"
+                        class="btn btn-outline-warning btn-sm"
+                        data-bs-toggle="modal"
+                        data-bs-target="#editBookingModal"
+                        @click="startEditingBooking(booking.id)"
+                      >
+                        Edit
+                      </button> -->
+                      <button
+                        class="btn btn-outline-success btn-sm"
+                        data-bs-toggle="modal"
+                        data-bs-target="#reviewModal"
+                        @click="startEditingBooking(booking.id)"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Main Content -->
-    <main class="main-content">
-      <div class="container-fluid py-4">
-        <!-- Overview Section -->
-        <div v-if="currentView === 'overview'">
-          <h2 class="mb-4">Dashboard Overview</h2>
-          <div class="row g-4">
-            <div class="col-md-4">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Active Bookings</h5>
-                  <h2 class="card-text">3</h2>
-                </div>
+    <!-- Edit Booking Modal -->
+    <div
+      class="modal fade text-light"
+      id="editBookingModal"
+      tabindex="-1"
+      aria-labelledby="editBookingModalLabel"
+      aria-hidden="true"
+      data-bs-theme="dark"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editBookingModalLabel">Edit Booking</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="editBooking">
+              <div class="mb-3">
+                <label for="serviceDate" class="form-label">Service Date</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  id="serviceDate"
+                  v-model="serviceDate"
+                  required
+                />
               </div>
-            </div>
-            <div class="col-md-4">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Completed Services</h5>
-                  <h2 class="card-text">12</h2>
-                </div>
+              <button
+                type="submit"
+                class="btn btn-outline-light"
+                data-bs-dismiss="modal"
+              >
+                Save Changes
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Section -->
+    <div v-if="$route.path === '/customer/profile'" class="pt-3">
+      <h1 class="mb-5 display-5">Profile</h1>
+      <div class="row g-4">
+        <!-- Profile Card -->
+        <div class="col-md-4">
+          <div class="card text-center h-100">
+            <div
+              class="card-body d-flex flex-column justify-content-center align-items-center"
+            >
+              <div class="mb-4">
+                <img
+                  src="https://api.dicebear.com/9.x/avataaars/svg?seed=Christopher&eyebrows=default&eyes=default&facialHair[]&facialHairColor[]&mouth=default&skinColor=edb98a&top=dreads01,dreads02,frida,frizzle,froBand,hat,miaWallace,shaggy,shaggyMullet,shavedSides,shortCurly,sides,straight02,straightAndStrand"
+                  alt="Profile Avatar"
+                  class="rounded-circle mb-3 border border-2 border-dark"
+                  width="120"
+                  height="120"
+                />
               </div>
-            </div>
-            <div class="col-md-4">
-              <div class="card">
-                <div class="card-body">
-                  <h5 class="card-title">Total Spent</h5>
-                  <h2 class="card-text">$450</h2>
-                </div>
-              </div>
+              <h4 class="mb-1">{{ authStore.user.username }}</h4>
+              <p class="text-muted mb-3">Customer</p>
             </div>
           </div>
         </div>
 
-        <!-- Other views can be added here -->
-        <div v-if="currentView !== 'overview'">
-          <h2 class="mb-4">{{ currentView.charAt(0).toUpperCase() + currentView.slice(1) }}</h2>
-          <p>Content for {{ currentView }} will be displayed here.</p>
+        <!-- Profile Form -->
+        <div class="col-md-8">
+          <div class="card h-100">
+            <div
+              class="card-header d-flex justify-content-between align-items-center"
+            >
+              <h5>Profile Information</h5>
+              <button
+                v-if="!isEditing"
+                @click="startEditing"
+                class="btn btn-outline-dark btn-sm"
+              >
+                Edit Profile
+              </button>
+            </div>
+            <div class="card-body">
+              <form @submit.prevent="updateProfile" class="row g-3">
+                <div class="col-12">
+                  <label for="username" class="form-label">Name</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="username"
+                    v-model="profile.username"
+                    :disabled="!isEditing"
+                  />
+                </div>
+                <div class="col-12">
+                  <label for="email" class="form-label">Email</label>
+                  <input
+                    type="email"
+                    class="form-control"
+                    id="email"
+                    v-model="profile.email"
+                    disabled
+                    readonly
+                  />
+                </div>
+                <div class="col-12">
+                  <label for="address" class="form-label">Address</label>
+                  <textarea
+                    class="form-control"
+                    id="address"
+                    rows="3"
+                    v-model="profile.address"
+                    :disabled="!isEditing"
+                  ></textarea>
+                </div>
+                <div v-if="isEditing" class="col-12 text-end">
+                  <button
+                    type="button"
+                    @click="cancelEdit"
+                    class="btn btn-outline-dark me-2"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" class="btn btn-dark px-4">
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
-    </main>
+    </div>
+
+    <!-- Review Modal -->
+    <div
+      class="modal fade"
+      id="reviewModal"
+      tabindex="-1"
+      aria-labelledby="reviewModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="reviewModalLabel">Give a review</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="closeBooking">
+              <div class="mb-3">
+                <label for="review" class="form-label" hidden>Review</label>
+                <textarea
+                  class="form-control"
+                  id="review"
+                  v-model="review"
+                  placeholder="Write your review here..."
+                  required
+                />
+              </div>
+              <div class="text-center">
+                <button
+                  type="submit"
+                  class="btn btn-dark"
+                  data-bs-dismiss="modal"
+                >
+                  Close Booking
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useAuthStore } from '@/stores/authStore';
+import { ref, computed, onMounted } from "vue";
+import { useAuthStore } from "@/stores/authStore";
+import { useNotificationStore } from "@/stores/notificationStore";
 
 const authStore = useAuthStore();
-const currentView = ref('overview');
+const notificationStore = useNotificationStore();
+
+const isEditing = ref(false);
+const profile = ref({
+  username: authStore.user?.username || "",
+  email: authStore.user?.email || "",
+  address: authStore.user?.address || "",
+});
+
+const originalProfile = ref({});
+
+const startEditing = () => {
+  originalProfile.value = { ...profile.value };
+  isEditing.value = true;
+};
+
+const cancelEdit = () => {
+  profile.value = { ...originalProfile.value };
+  isEditing.value = false;
+};
+
+const updateProfile = async () => {
+  try {
+    await authStore.updateCustomerProfile(
+      profile.value.username,
+      profile.value.address
+    );
+    isEditing.value = false;
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    notificationStore.addNotification({
+      message: "Failed to update profile",
+      type: "error",
+    });
+    profile.value = { ...originalProfile.value };
+  }
+};
+
+const bookings = ref([]);
+const requestedBookings = computed(() => {
+  return bookings.value.filter((booking) => booking.status === "requested");
+});
+const assignedBookings = computed(() => {
+  return bookings.value.filter(
+    (booking) =>
+      booking.status === "assigned" ||
+      booking.status === "closed by professional"
+  );
+});
+
+const fetchBookings = async () => {
+  try {
+    const response = await fetch(
+      "http://localhost:5000/api/customer/service-requests",
+      {
+        method: "GET",
+        headers: {
+          Authorization: authStore.token,
+        },
+      }
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch service requests");
+    }
+    const data = await response.json();
+    bookings.value = data;
+  } catch (error) {
+    console.error("Error fetching service requests:", error);
+  }
+};
+
+// Booking related functions
+const serviceDate = ref("");
+const editingBookingId = ref(null);
+const review = ref("");
+
+const startEditingBooking = (bookingId) => {
+  editingBookingId.value = bookingId;
+};
+const editBooking = async () => {
+  try {
+    const response = await fetch(
+      `http://localhost:5000/api/customer/service-requests/${editingBookingId.value}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: authStore.token,
+        },
+        body: JSON.stringify({
+          date_of_request: serviceDate.value,
+        }),
+      }
+    );
+    if (!response.ok) {
+      throw new Error("Failed to edit booking");
+    }
+    editingBookingId.value = null;
+    await fetchBookings();
+  } catch (error) {
+    console.error("Error editing booking:", error);
+  }
+};
+
+const deleteBooking = async (bookingId) => {
+  try {
+    const response = await fetch(
+      `http://localhost:5000/api/customer/service-requests/${bookingId}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: authStore.token,
+        },
+      }
+    );
+    if (!response.ok) {
+      throw new Error("Failed to delete booking");
+    }
+    await fetchBookings();
+    notificationStore.addNotification({
+      message: "Booking deleted",
+      type: "success",
+    });
+  } catch (error) {
+    console.error("Error deleting booking:", error);
+    notificationStore.addNotification({
+      message: "Failed to delete booking",
+      type: "error",
+    });
+  }
+};
+
+const closeBooking = async () => {
+  try {
+    const response = await fetch(
+      `http://localhost:5000/api/customer/service-requests/${editingBookingId.value}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: authStore.token,
+        },
+        body: JSON.stringify({
+          review: review.value,
+        }),
+      }
+    );
+    if (!response.ok) {
+      throw new Error("Failed to complete booking");
+    }
+    await fetchBookings();
+    notificationStore.addNotification({
+      message: "Booking completed",
+      type: "success",
+    });
+  } catch (error) {
+    console.error("Error completing booking:", error);
+    notificationStore.addNotification({
+      message: "Failed to complete booking",
+      type: "error",
+    });
+  }
+};
+
+onMounted(async () => {
+  await fetchBookings();
+});
 </script>
 
 <style scoped>
-.dashboard-container {
-  display: flex;
-  min-height: 100vh;
-}
-
-.sidebar-toggle {
-  top: 1rem;
-  left: 1rem;
-  z-index: 1045;
-  background-color: #2f4858;
-  border: none;
-}
-
-.sidebar-toggle:hover,
-.sidebar-toggle:focus {
-  background-color: #ff9a3c;
-}
-
-/* Base sidebar styles */
-.sidebar {
-  width: 280px;
-  background-color: #2f4858 !important; /* Force background color */
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  min-height: 100vh;
-}
-
-.offcanvas-header {
-  background-color: #2f4858;
-}
-
-.btn-close {
-  filter: invert(1) grayscale(100%) brightness(200%);
-}
-
-.sidebar .nav-link {
-  color: rgba(255, 255, 255, 0.8);
-  padding: 0.75rem 1.5rem;
-  transition: all 0.3s;
-}
-
-.sidebar .nav-link:hover,
-.sidebar .nav-link.active {
-  color: #ffffff;
-  background-color: #ff9a3c;
-}
-
-.sidebar-header {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.sidebar h6,
-.sidebar .offcanvas-title {
-  color: white;
-}
-
-.sidebar small.text-muted {
-  color: rgba(255, 255, 255, 0.6) !important;
-}
-
-.main-content {
-  flex: 1;
-  background-color: #f9fafb;
-  margin-left: 280px;
-  min-height: 100vh;
-  width: calc(100% - 280px);
-}
-
 .card {
   border: none;
-  border-radius: 10px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s;
+  background-color: #fff;
+  border-radius: 18px;
+  box-shadow: 2px 4px 12px #00000014;
+  overflow: hidden;
 }
 
-.card:hover {
-  transform: translateY(-5px);
-}
-
-/* Responsive Styles */
-@media (max-width: 991.98px) {
-  .main-content {
-    margin-left: 0;
-    width: 100%;
-  }
-  
-  .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-  }
+.badge {
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
 }
 </style>

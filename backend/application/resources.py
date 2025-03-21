@@ -7,42 +7,35 @@ from datetime import datetime
 from flask_security.utils import verify_password
 
 def register_resources(api):
-    api.add_resource(UsersResource, '/api/users')
+    api.add_resource(UsersResource, '/api/users', '/api/users/<int:user_id>')
     api.add_resource(CustomerSignupResource, '/api/signup/customer')
     api.add_resource(ServiceProfessionalSignupResource, '/api/signup/service_professional')
     api.add_resource(ServiceListResource, '/api/services')
     api.add_resource(ServiceResource, '/api/services/<int:service_id>')
-    api.add_resource(ServiceRequestListResource, '/api/service-requests')
-    api.add_resource(ServiceRequestResource, '/api/service-requests/<int:request_id>')
-    api.add_resource(UserServiceRequestsResource, '/api/users/me/service-requests')
-    api.add_resource(ProfessionalServiceRequestsResource, '/api/professionals/me/service-requests')
+    api.add_resource(ServiceRequestsResource, '/api/service-requests', '/api/service-requests/<int:request_id>')
+    api.add_resource(CustomerServiceRequestsResource, '/api/customer/service-requests', '/api/customer/service-requests/<int:request_id>')
+    api.add_resource(ProfessionalServiceRequestsResource, '/api/professional/service-requests', '/api/professional/service-requests/<int:request_id>')
     api.add_resource(LoginResource, '/api/login')
     api.add_resource(LogoutResource, '/api/logout')
     api.add_resource(ProfessionalApprovalResource, '/api/professionals/<int:user_id>/approval')
     api.add_resource(BlockUserResource, '/api/users/<int:user_id>/block')
     api.add_resource(UnblockUserResource, '/api/users/<int:user_id>/unblock')
+    api.add_resource(UserProfileResource, '/api/users/me/profile')
 
 class UsersResource(Resource):
     @auth_required('token')
-    @roles_required('admin')
-    def get(self):
+    @roles_accepted('admin', 'customer')
+    def get(self, user_id=None):
         try:
-            users = User.query.all()
-            return jsonify([{
-                'id': user.id,
-                'email': user.email,
-                'username': user.username,
-                'role': user.roles[0].name if user.roles else None,
-                'active': user.active,
-                'status': user.status,
-                'address': user.address,
-                'about': user.about,
-                'experience_years': user.experience_years,
-                'service_id': user.service_id
-            } for user in users])
+            if user_id:
+                user = User.query.get_or_404(user_id)
+                return jsonify(user.to_dict())
+            else:
+                users = User.query.all()
+                return jsonify([user.to_dict() for user in users])
         except Exception as e:
             return {'message': str(e)}, 500
-
+        
 class LoginResource(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
@@ -67,12 +60,7 @@ class LoginResource(Resource):
         return {
             "message": "Login successful",
             "token": auth_token,
-            "user": {
-                "id": user.id,
-                "email": user.email,
-                "username": user.username,
-                "role": user.roles[0].name if user.roles else None
-            }
+            "user": user.to_dict()
         }, 200
   
 class CustomerSignupResource(Resource):
@@ -112,13 +100,7 @@ class CustomerSignupResource(Resource):
             return {
                 "message": "Customer registered successfully",
                 "token": auth_token,
-                "user": {
-                    "id": user.id,
-                    "email": user.email,
-                    "username": user.username,
-                    "address": user.address,
-                    "role": user.roles[0].name
-                }
+                "user": user.to_dict()
             }, 201
             
         except Exception as e:
@@ -175,13 +157,7 @@ class ServiceListResource(Resource):
 
     def get(self):
         services = Service.query.all()
-        return jsonify([{
-            'id': service.id,
-            'name': service.name,
-            'base_price': service.base_price,
-            'time_required': service.time_required,
-            'description': service.description
-        } for service in services])
+        return jsonify([service.to_dict() for service in services])
 
     @auth_required('token')
     @roles_required('admin')
@@ -223,13 +199,7 @@ class ServiceResource(Resource):
 
     def get(self, service_id):
         service = Service.query.get_or_404(service_id)
-        return {
-            'id': service.id,
-            'name': service.name,
-            'base_price': service.base_price,
-            'time_required': service.time_required,
-            'description': service.description
-        }
+        return jsonify(service.to_dict())
         
 
     @auth_required('token')
@@ -269,108 +239,114 @@ class ServiceResource(Resource):
         db.session.commit()
         return {'message': 'Service deleted successfully'}, 204
 
-class ServiceRequestListResource(Resource):
+class ServiceRequestsResource(Resource):
     @auth_required('token')
-    @roles_accepted('admin', 'customer', 'service_professional')  
-    def get(self):
-        requests = ServiceRequest.query.all()
-        return jsonify([{
-            'id': req.id,
-            'service_id': req.service_id,
-            'customer_id': req.customer_id,
-            'professional_id': req.professional_id,
-            'status': req.status,
-            'date_of_request': req.date_of_request.isoformat(),
-            'date_of_completion': req.date_of_completion.isoformat() if req.date_of_completion else None,
-            'review': req.review
-        } for req in requests])
+    @roles_accepted('admin', 'service_professional', 'customer')  
+    def get(self, request_id=None):
+        if request_id:
+            request = ServiceRequest.query.get_or_404(request_id)
+            return jsonify(request.to_dict())
+        else:
+            requests = ServiceRequest.query.all()
+            return jsonify([req.to_dict() for req in requests])
 
+# For customer to view, create, update, delete their service requests
+class CustomerServiceRequestsResource(Resource):
+    def __init__(self):
+        self.parser = reqparse.RequestParser()   
+        self.parser.add_argument('review', type=str)
+        self.parser.add_argument('service_id', type=int)
+        self.parser.add_argument('date_of_request', type=str)
+    
+    @auth_required('token')
+    @roles_required('customer')
+    def get(self, request_id=None):
+        if request_id:
+            request = ServiceRequest.query.get_or_404(request_id)
+            return jsonify(request.to_dict())
+        else:
+            requests = ServiceRequest.query.filter_by(customer_id=current_user.id).all()
+            return jsonify([req.to_dict() for req in requests])
+        
     @auth_required('token')
     @roles_required('customer')
     def post(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('service_id', type=int, required=True)
-        args = parser.parse_args()
-        
+        args = self.parser.parse_args()
+
         request = ServiceRequest(
             service_id=args['service_id'],
-            customer_id=current_user.id, 
-            status='requested'
+            customer_id=current_user.id,
+            date_of_request=datetime.fromisoformat(args['date_of_request'])
         )
+        
         db.session.add(request)
         db.session.commit()
-        return {'message': 'Service request created successfully'}, 201
-
-class ServiceRequestResource(Resource):
-    @auth_required('token')
-    @roles_accepted('admin', 'customer', 'service_professional')
-    def get(self, request_id):
-        request = ServiceRequest.query.get_or_404(request_id)
-        return {
-            'id': request.id,
-            'service_id': request.service_id,
-            'customer_id': request.customer_id,
-            'professional_id': request.professional_id,
-            'status': request.status,
-            'date_of_request': request.date_of_request.isoformat(),
-            'date_of_completion': request.date_of_completion.isoformat() if request.date_of_completion else None,
-            'review': request.review
-        }
-
-    @auth_required('token')
-    @roles_accepted('admin', 'service_professional')
-    def put(self, request_id):
-        parser = reqparse.RequestParser()
-        parser.add_argument('status', type=str)
-        parser.add_argument('professional_id', type=int)
-        parser.add_argument('review', type=str)
-        parser.add_argument('date_of_completion', type=str)
-        args = parser.parse_args()
-
-        request = ServiceRequest.query.get_or_404(request_id)
         
-        if args['status']:
-            request.status = args['status']
-        if args['professional_id']:
-            request.professional_id = args['professional_id']
-        if args['review']:
-            request.review = args['review']
-        if args['date_of_completion']:
-            request.date_of_completion = datetime.fromisoformat(args['date_of_completion'])
-
-        db.session.commit()
-        return {'message': 'Service request updated successfully'}
-
-class UserServiceRequestsResource(Resource):
+        return jsonify({
+            'message': 'Service request created successfully'
+        })
+        
     @auth_required('token')
     @roles_required('customer')
-    def get(self):
-        requests = ServiceRequest.query.filter_by(customer_id=current_user.id).all()
-        return jsonify([{
-            'id': req.id,
-            'service_id': req.service_id,
-            'status': req.status,
-            'professional_id': req.professional_id,
-            'date_of_request': req.date_of_request.isoformat(),
-            'date_of_completion': req.date_of_completion.isoformat() if req.date_of_completion else None,
-            'review': req.review
-        } for req in requests])
+    def put(self, request_id):
+        args = self.parser.parse_args()
+        request = ServiceRequest.query.get_or_404(request_id)
+        
+        if request.status == 'requested':
+            if args['date_of_request']:
+                request.date_of_request = datetime.fromisoformat(args['date_of_request'])
+        else:
+            if args['review']:
+                request.review = args['review']
+            if request.status == 'closed by professional':
+                request.status = "closed"
+            else:
+                request.status = "closed by customer"
+                request.date_of_completion = datetime.now()
+                request.service.no_of_bookings += 1
+            
+            
+
+        db.session.commit()
+        return jsonify({'message': 'Service request updated successfully'})
+    
+    @auth_required('token')
+    @roles_required('customer')
+    def delete(self, request_id):
+        request = ServiceRequest.query.get_or_404(request_id)
+        db.session.delete(request)
+        db.session.commit()
+        return jsonify({'message': 'Service request deleted successfully'})
 
 class ProfessionalServiceRequestsResource(Resource):
     @auth_required('token')
     @roles_required('service_professional')
     def get(self):
         requests = ServiceRequest.query.filter_by(professional_id=current_user.id).all()
-        return jsonify([{
-            'id': req.id,
-            'service_id': req.service_id,
-            'customer_id': req.customer_id,
-            'status': req.status,
-            'date_of_request': req.date_of_request.isoformat(),
-            'date_of_completion': req.date_of_completion.isoformat() if req.date_of_completion else None,
-            'review': req.review
-        } for req in requests])
-        
+        return jsonify([req.to_dict() for req in requests])
+    
+    @auth_required('token')
+    @roles_required('service_professional')
+    def post(self, request_id):
+        request = ServiceRequest.query.get_or_404(request_id)
+        request.professional_id = current_user.id
+        request.status = 'assigned'
+        db.session.commit()
+        return jsonify({'message': 'Service request assigned successfully'})
+    
+    @auth_required('token')
+    @roles_required('service_professional')
+    def put(self, request_id):
+        request = ServiceRequest.query.get_or_404(request_id)
+        if request.status == 'closed by customer':
+            request.status = 'closed'
+        else:
+            request.status = 'closed by professional'
+            request.date_of_completion = datetime.now()
+            request.service.no_of_bookings += 1
+        db.session.commit()
+        return jsonify({'message': 'Service request updated successfully'})
+    
 class LogoutResource(Resource):
     @auth_required('token')
     def post(self):
@@ -424,5 +400,44 @@ class UnblockUserResource(Resource):
     def put(self, user_id):
         user = User.query.get_or_404(user_id)
         user.active = True
+        user.status = 'approved'
         db.session.commit()
         return {'message': 'User unblocked successfully'}, 200
+
+class UserProfileResource(Resource):
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument('id', type=int)
+        self.parser.add_argument('username', type=str)
+        self.parser.add_argument('address', type=str)
+        self.parser.add_argument('about', type=str)
+        self.parser.add_argument('experience_years', type=int)
+
+    @auth_required('token')
+    @roles_accepted('customer', 'service_professional')
+    def put(self):
+        args = self.parser.parse_args()
+        
+        try:
+            user = User.query.get(args['id'])
+            if args['username'] is not None:
+                user.username = args['username']
+            if args['address'] is not None:
+                user.address = args['address']
+            
+            if 'service_professional' in [role.name for role in user.roles]:
+                if args['about'] is not None:
+                    user.about = args['about']
+                if args['experience_years'] is not None:
+                    user.experience_years = args['experience_years']
+            
+            db.session.commit()
+            
+            return jsonify({
+                'message': 'Profile updated successfully',
+                'user': user.to_dict()
+            })
+            
+        except Exception as e:
+            db.session.rollback()
+            return {'message': f'Error updating profile: {str(e)}'}, 500

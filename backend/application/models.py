@@ -43,6 +43,21 @@ class User(db.Model, UserMixin):
     
     # Relationship with service (for professionals)
     service = db.relationship('Service', backref='professionals')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'email': self.email,
+            'username': self.username,
+            'address': self.address,
+            'about': self.about,
+            'experience_years': self.experience_years,
+            'service_id': self.service_id,
+            'status': self.status,
+            'professional_since': self.professional_since.isoformat() if self.professional_since else None,
+            'active': self.active,
+            'role': self.roles[0].name
+        }
 
 class Role(db.Model, RoleMixin):
     __tablename__ = 'role'
@@ -72,9 +87,20 @@ class Service(db.Model):
     base_price = db.Column(db.Float, nullable=False)
     time_required = db.Column(db.Integer, nullable=True)
     description = db.Column(db.Text, nullable=True)
+    no_of_bookings = db.Column(db.Integer, nullable=True)
     
     # A service can be linked to many service requests.
     service_requests = db.relationship('ServiceRequest', backref='service', lazy=True)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'base_price': self.base_price,
+            'time_required': self.time_required,
+            'description': self.description,
+            'no_of_bookings': self.no_of_bookings
+        }
 
 # ----------------------------------------------------
 # 3. Service Request Model
@@ -95,10 +121,25 @@ class ServiceRequest(db.Model):
     # NULL until a professional is assigned.
     professional_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     
-    date_of_request = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    date_of_request = db.Column(db.DateTime, nullable=False)
     date_of_completion = db.Column(db.DateTime, nullable=True)
     
     # Track status ('requested', 'assigned', 'closed')
     status = db.Column(db.String(50), nullable=False, default='requested')
     
     review = db.Column(db.Text, nullable=True)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'service_id': self.service_id,
+            'customer_id': self.customer_id,
+            'professional_id': self.professional_id,
+            'date_of_request': self.date_of_request,
+            'date_of_completion': self.date_of_completion,
+            'status': self.status,
+            'review': self.review,
+            'service': self.service.to_dict(),
+            'professional': self.professional.to_dict() if self.professional else None,
+            'customer': self.customer.to_dict()
+        }

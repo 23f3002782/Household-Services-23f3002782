@@ -1,161 +1,238 @@
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { useNotificationStore } from './notificationStore'
+import { defineStore } from "pinia";
+import { ref, computed } from "vue";
+import { useRouter } from "vue-router";
+import { useNotificationStore } from "./notificationStore";
 
-export const useAuthStore = defineStore('auth', () => {
-  const router = useRouter()
-  const notificationStore = useNotificationStore()
-  const user = ref(JSON.parse(localStorage.getItem('user')) || null)
-  const token = ref(localStorage.getItem('token') || null)
+export const useAuthStore = defineStore("auth", () => {
+  const router = useRouter();
+  const notificationStore = useNotificationStore();
+  const user = ref(JSON.parse(localStorage.getItem("user")) || null);
+  const token = ref(localStorage.getItem("token") || null);
 
-  const isAuthenticated = computed(() => !!user.value && !!token.value)
+  const isAuthenticated = computed(() => !!user.value && !!token.value);
 
   const setUserData = (userData, userToken) => {
-    user.value = userData
-    token.value = userToken
-    localStorage.setItem('user', JSON.stringify(userData))
-    localStorage.setItem('token', userToken)
-  }
+    user.value = userData;
+    token.value = userToken;
+    localStorage.setItem("user", JSON.stringify(userData));
+    localStorage.setItem("token", userToken);
+  };
 
   const clearUserData = () => {
-    user.value = null
-    token.value = null
-    localStorage.removeItem('user')
-    localStorage.removeItem('token')
-  }
+    user.value = null;
+    token.value = null;
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+  };
 
   const login = async (credentials) => {
     try {
-      const response = await fetch('http://localhost:5000/api/login', {
-        method: 'POST',
+      const response = await fetch("http://localhost:5000/api/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(credentials)
-      })
+        body: JSON.stringify(credentials),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
-        setUserData(data.user, data.token)
+        setUserData(data.user, data.token);
         notificationStore.addNotification({
-          message: 'Successfully logged in!',
-          type: 'success'
-        })
+          message: "Successfully logged in!",
+          type: "success",
+        });
 
-        if (data.user.role === 'admin') {
-          router.push('/admin/dashboard')
-        } else if (data.user.role === 'professional') {
-          router.push('/professional/dashboard')
+        if (data.user.role === "admin") {
+          router.push("/admin/dashboard");
+        } else if (data.user.role === "service_professional") {
+          router.push("/professional/dashboard");
         } else {
-          router.push('/customer/dashboard')
+          router.push("/customer/dashboard");
         }
 
-        return { success: true }
+        return { success: true };
       } else {
-        throw new Error(data.message || 'Login failed')
+        throw new Error(data.message || "Login failed");
       }
     } catch (err) {
       notificationStore.addNotification({
         message: err.message,
-        type: 'error'
-      })
-      return { success: false, error: err.message }
+        type: "error",
+      });
+      return { success: false, error: err.message };
     }
-  }
+  };
 
   const customerSignup = async (customerData) => {
     try {
-      const response = await fetch('http://localhost:5000/api/signup/customer', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(customerData)
-      })
+      const response = await fetch(
+        "http://localhost:5000/api/signup/customer",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(customerData),
+        }
+      );
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
-        setUserData(data.user, data.token)
+        setUserData(data.user, data.token);
         notificationStore.addNotification({
-          message: 'Welcome! Your account has been created successfully.',
-          type: 'success'
-        })
-        router.push('/customer/dashboard')
-        return { success: true }
+          message: "Welcome! Your account has been created successfully.",
+          type: "success",
+        });
+        router.push("/customer/dashboard");
+        return { success: true };
       } else {
-        throw new Error(data.message || 'Customer signup failed')
+        throw new Error(data.message || "Customer signup failed");
       }
     } catch (err) {
       notificationStore.addNotification({
         message: err.message,
-        type: 'error'
-      })
-      return { success: false, error: err.message }
+        type: "error",
+      });
+      return { success: false, error: err.message };
     }
-  }
+  };
 
   const professionalSignup = async (professionalData) => {
     try {
-      const response = await fetch('http://localhost:5000/api/signup/service_professional', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(professionalData)
-      })
+      const response = await fetch(
+        "http://localhost:5000/api/signup/service_professional",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(professionalData),
+        }
+      );
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
         notificationStore.addNotification({
-          message: 'Your registration is pending approval. We will notify you once your account is approved.',
-          type: 'info',
-          timeout: 5000
-        })
-        router.push('/')
-        return { success: true }
+          message:
+            "Your registration is pending approval. We will notify you once your account is approved.",
+          type: "info",
+          timeout: 5000,
+        });
+        router.push("/");
+        return { success: true };
       } else {
-        throw new Error(data.message || 'Professional signup failed')
+        throw new Error(data.message || "Professional signup failed");
       }
     } catch (err) {
       notificationStore.addNotification({
         message: err.message,
-        type: 'error'
-      })
-      return { success: false, error: err.message }
+        type: "error",
+      });
+      return { success: false, error: err.message };
     }
-  }
+  };
+
+  const updateCustomerProfile = async (username, address) => {
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/users/me/profile",
+        {
+          method: "PUT",
+          headers: {
+            Authorization: token.value,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id: user.value.id, username, address }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update profile");
+      }
+
+      const data = await response.json();
+      user.value = data.user;
+      localStorage.setItem("user", JSON.stringify(user.value));
+
+      notificationStore.addNotification({
+        message: "Profile updated successfully",
+        type: "success",
+      });
+    } catch (err) {
+      console.error("Update customer profile error:", err);
+      throw err;
+    }
+  };
+
+  const updateProfessionalProfile = async (
+    username,
+    yearsOfExperience,
+    about
+  ) => {
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/users/me/profile ",
+        {
+          method: "PUT",
+          headers: {
+            Authorization: token.value,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: user.value.id,
+            username,
+            experience_years: yearsOfExperience,
+            about,
+          }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to update profile");
+      }
+      const data = await response.json();
+      user.value = data.user;
+      localStorage.setItem("user", JSON.stringify(user.value));
+      notificationStore.addNotification({
+        message: "Profile updated successfully",
+        type: "success",
+      });
+    } catch (err) {
+      console.error("Update professional profile error:", err);
+      throw err;
+    }
+  };
 
   const logout = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/logout', {
-        method: 'POST',
+      const response = await fetch("http://localhost:5000/api/logout", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token.value}`
-        }
-      })
+          Authorization: `Bearer ${token.value}`,
+        },
+      });
 
       if (response.ok) {
-        clearUserData()
+        clearUserData();
         notificationStore.addNotification({
-          message: 'Successfully logged out',
-          type: 'success'
-        })
-        router.push('/')
+          message: "Successfully logged out",
+          type: "success",
+        });
+        router.push("/");
       }
     } catch (err) {
-      console.error('Logout error:', err)
-      clearUserData()
+      console.error("Logout error:", err);
+      clearUserData();
       notificationStore.addNotification({
-        message: 'Logged out with errors',
-        type: 'warning'
-      })
-      router.push('/')
+        message: "Logged out with errors",
+        type: "warning",
+      });
+      router.push("/");
     }
-  }
+  };
 
   return {
     user,
@@ -164,6 +241,8 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     customerSignup,
     professionalSignup,
-    logout
-  }
-})
+    updateCustomerProfile,
+    updateProfessionalProfile,
+    logout,
+  };
+});

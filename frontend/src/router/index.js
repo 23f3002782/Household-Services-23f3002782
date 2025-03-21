@@ -1,9 +1,11 @@
 import HeroPage from "@/views/HeroPage.vue";
-import { createRouter, createWebHistory } from "vue-router";
 import AdminDashboard from "@/views/AdminDashboard.vue";
 import ServicesPage from "@/views/ServicesPage.vue";
 import CustomerDashboard from "@/views/CustomerDashboard.vue";
 import ProfessionalDashboard from "@/views/ProfessionalDashboard.vue";
+import ProfessionalDetails from "@/views/ProfessionalDetails.vue";
+
+import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "@/stores/authStore";
 
 const router = createRouter({
@@ -27,8 +29,8 @@ const router = createRouter({
           component: AdminDashboard,
         },
         {
-          path: "users",
-          name: "admin-users",
+          path: "customers",
+          name: "admin-customers",
           component: AdminDashboard,
         },
         {
@@ -40,8 +42,51 @@ const router = createRouter({
           path: "services",
           name: "admin-services",
           component: AdminDashboard,
-        }
-      ]
+        },
+      ],
+    },
+    // Customer routes
+    {
+      path: "/customer",
+      name: "customer",
+      component: CustomerDashboard,
+      meta: { requiresAuth: true, requiresCustomer: true },
+      children: [
+        {
+          path: "dashboard",
+          name: "customer-dashboard",
+          component: CustomerDashboard,
+        },
+        {
+          path: "profile",
+          name: "customer-profile",
+          component: CustomerDashboard,
+        },
+      ],
+    },
+    // Professional routes
+    {
+      path: "/professional",
+      name: "professional",
+      component: ProfessionalDashboard,
+      meta: { requiresAuth: true, requiresProfessional: true },
+      children: [
+        {
+          path: "dashboard",
+          name: "professional-dashboard",
+          component: ProfessionalDashboard,
+        },
+        {
+          path: "profile",
+          name: "professional-profile",
+          component: ProfessionalDashboard,
+        },
+        {
+          path: "requests",
+          name: "professional-requests",
+          component: ProfessionalDashboard,
+        },
+      ],
     },
     {
       path: "/services",
@@ -49,24 +94,10 @@ const router = createRouter({
       component: ServicesPage,
     },
     {
-      path: "/customer/dashboard",
-      name: "customer-dashboard",
-      component: CustomerDashboard,
-      meta: { requiresAuth: true, requiresCustomer: true }
-    },
-    {
-      path: "/professional/dashboard",
-      name: "professional-dashboard",
-      component: ProfessionalDashboard,
-      meta: { requiresAuth: true, requiresProfessional: true }
-    },
-    {
-      path: "/about",
-      name: "about",
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      // component: () => import("../views/AboutView.vue"),
+      path: "/professionals/:id",
+      name: "ProfessionalDetails",
+      component: ProfessionalDetails,
+      meta: { requiresAuth: true },
     },
   ],
 });
@@ -78,25 +109,34 @@ router.beforeEach((to, from, next) => {
   const userRole = authStore.user?.role;
 
   // Check if route requires authentication
-  if (to.matched.some(record => record.meta.requiresAuth)) {
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
     if (!isAuthenticated) {
-      next('/');
+      next("/");
       return;
     }
 
     // Check role-based access
-    if (to.matched.some(record => record.meta.requiresAdmin) && userRole !== 'admin') {
-      next('/');
+    if (
+      to.matched.some((record) => record.meta.requiresAdmin) &&
+      userRole !== "admin"
+    ) {
+      next("/");
       return;
     }
 
-    if (to.matched.some(record => record.meta.requiresCustomer) && userRole !== 'customer') {
-      next('/');
+    if (
+      to.matched.some((record) => record.meta.requiresCustomer) &&
+      userRole !== "customer"
+    ) {
+      next("/");
       return;
     }
 
-    if (to.matched.some(record => record.meta.requiresProfessional) && userRole !== 'professional') {
-      next('/');
+    if (
+      to.matched.some((record) => record.meta.requiresProfessional) &&
+      userRole !== "service_professional"
+    ) {
+      next("/");
       return;
     }
   }
