@@ -1,10 +1,14 @@
+import os
 from flask_restful import Resource, reqparse
 from .models import *
 from flask_security import auth_required, roles_required, roles_accepted, hash_password, login_user,current_user, logout_user
-from flask import request, jsonify
+from flask import request, jsonify, send_from_directory
 from flask import current_app as app
 from datetime import datetime
 from flask_security.utils import verify_password
+from celery.result import AsyncResult # type: ignore
+from .tasks import *
+from .mail import send_email
 
 def register_resources(api):
     api.add_resource(UsersResource, '/api/users', '/api/users/<int:user_id>')
@@ -21,6 +25,7 @@ def register_resources(api):
     api.add_resource(BlockUserResource, '/api/users/<int:user_id>/block')
     api.add_resource(UnblockUserResource, '/api/users/<int:user_id>/unblock')
     api.add_resource(UserProfileResource, '/api/users/me/profile')
+    api.add_resource(ExportServiceRequestsResource, '/api/export/request_details', '/api/export/status/<id>')
 
 class UsersResource(Resource):
     @auth_required('token')
@@ -282,6 +287,10 @@ class CustomerServiceRequestsResource(Resource):
         db.session.add(request)
         db.session.commit()
         
+        professionals = User.query.filter_by(service_id=request.service_id).all()
+        for professional in professionals:
+            send_email(professional.email, 'New Service Request', f"Hi {professional.username}, a new service request has been created.")
+        
         return jsonify({
             'message': 'Service request created successfully'
         })
@@ -301,12 +310,12 @@ class CustomerServiceRequestsResource(Resource):
             if request.status == 'closed by professional':
                 request.status = "closed"
             else:
+                status_update.delay(f"Hi {request.professional.username}, customer has closed the service request.")
+                send_email(request.professional.email, 'Service Request Closed', f"Hi {request.professional.username}, {request.customer.username} has closed the service request.")
                 request.status = "closed by customer"
                 request.date_of_completion = datetime.now()
                 request.service.no_of_bookings += 1
             
-            
-
         db.session.commit()
         return jsonify({'message': 'Service request updated successfully'})
     
@@ -332,6 +341,7 @@ class ProfessionalServiceRequestsResource(Resource):
         request.professional_id = current_user.id
         request.status = 'assigned'
         db.session.commit()
+        send_email(request.customer.email, 'Service Request Assigned', f"Hi {request.customer.username}, our service professional has been assigned to your service request.")
         return jsonify({'message': 'Service request assigned successfully'})
     
     @auth_required('token')
@@ -342,6 +352,8 @@ class ProfessionalServiceRequestsResource(Resource):
             request.status = 'closed'
         else:
             request.status = 'closed by professional'
+            status_update.delay(f"Hi {request.customer.username}, our service professional has closed the service request.")
+            send_email(request.customer.email, 'Service Request Closed', f"Hi {request.customer.username}, our service professional has closed the service request.")
             request.date_of_completion = datetime.now()
             request.service.no_of_bookings += 1
         db.session.commit()
@@ -389,6 +401,7 @@ class BlockUserResource(Resource):
     @roles_required('admin')
     def put(self, user_id):
         user = User.query.get_or_404(user_id)
+        send_email(user.email, 'Account Blocked', f"Hi {user.username}, your account has been blocked.")
         user.active = False
         user.status = 'blocked'
         db.session.commit()
@@ -399,6 +412,7 @@ class UnblockUserResource(Resource):
     @roles_required('admin')
     def put(self, user_id):
         user = User.query.get_or_404(user_id)
+        send_email(user.email, 'Account Unblocked', f"Hi {user.username}, your account has been unblocked.")
         user.active = True
         user.status = 'approved'
         db.session.commit()
@@ -440,4 +454,17 @@ class UserProfileResource(Resource):
             
         except Exception as e:
             db.session.rollback()
-            return {'message': f'Error updating profile: {str(e)}'}, 500
+            return {'message': f'Error updating profile: {str(e)}'}, 500      
+        
+class ExportServiceRequestsResource(Resource):
+    @auth_required('token')
+    @roles_required('admin')
+    def post(self):
+        res = download_request_details.delay()
+        return jsonify({'message': 'Sent to celery', 'id':res.id});
+            
+    # @auth_required('token')
+    # @roles_required('admin')
+    def get(self, id):
+        res = AsyncResult(id)
+        return send_from_directory('exports', res.result["filename"], as_attachment=True)

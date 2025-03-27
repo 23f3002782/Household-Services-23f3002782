@@ -2,10 +2,12 @@ from flask import Flask
 from application.database import db 
 from application.models import User, Role, Service
 from application.config import LocalDevelopmentConfig
-from flask_security import Security, SQLAlchemyUserDatastore
-from flask_security import hash_password
+from flask_security import Security, SQLAlchemyUserDatastore, hash_password
+from application.celery_init import celery_init_app
 from flask_restful import Api
 from flask_cors import CORS
+from celery.schedules import crontab # type: ignore
+from application.tasks import *
 
 def create_app():
     app = Flask(__name__)
@@ -20,6 +22,8 @@ def create_app():
     return app
 
 app = create_app()
+celery = celery_init_app(app)
+celery.autodiscover_tasks()
 api = Api(app)
 
 with app.app_context():
@@ -30,29 +34,12 @@ with app.app_context():
     app.security.datastore.find_or_create_role(name = "customer", description = "Receive service from service professionals")
     db.session.commit()
 
-    if not app.security.datastore.find_user(email = "admin@user.com"):
-        app.security.datastore.create_user(email = "admin@user.com",
+    if not app.security.datastore.find_user(email = "admin@email.com"):
+        app.security.datastore.create_user(email = "admin@email.com",
                                            username = "admin",
                                            status="approved",
                                            password = hash_password("1234"),
                                            roles = ['admin'])
-        
-    # if not app.security.datastore.find_user(email = "sp1@user.com"):
-    #     app.security.datastore.create_user(email = "sp1@user.com",
-    #                                        username = "Sp1",
-    #                                        password = hash_password("1234"),
-    #                                        experience_years = 10,
-    #                                        status="approved",
-    #                                        service_id=1,
-    #                                        about = "I am a service professional. I have 10 years of experience in the field. I am very good at my job.",
-    #                                        roles = ['service_professional'])
-    # if not app.security.datastore.find_user(email="cus1@user.com"):
-    #     app.security.datastore.create_user(email="cus1@user.com",
-    #                                     username="Cus1",
-    #                                     status="approved",
-    #                                     password=hash_password("1234"),
-    #                                     address="3/456, Sector-A, Vikas Nagar",
-    #                                     roles=['customer'])
 
     db.session.commit()
 
@@ -213,10 +200,20 @@ with app.app_context():
 
     db.session.commit()
 
-from application.routes import *
-
 from application.resources import register_resources
 register_resources(api)
+
+@celery.on_after_finalize.connect 
+def setup_periodic_tasks(sender, **kwargs):
+    sender.add_periodic_task(
+        crontab(minute = '*/5'),
+        monthly_report.s(),
+    )
+    sender.add_periodic_task(
+        crontab(minute = '*/1'),
+        remind_professional.s()
+    )
+
 
 if __name__ == "__main__":
     app.run()

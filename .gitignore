@@ -1,5 +1,9 @@
 .vscode
 
+backend/__pycache__/
+backend/dump.rdb
+backend/exports/
+
 backend/.venv
 backend/application/__pycache__
 
