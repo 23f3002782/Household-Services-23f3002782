@@ -6,7 +6,7 @@ from flask_security import Security, SQLAlchemyUserDatastore, hash_password
 from application.celery_init import celery_init_app
 from flask_restful import Api
 from flask_cors import CORS
-from celery.schedules import crontab # type: ignore
+from celery.schedules import crontab
 from application.tasks import *
 
 def create_app():
