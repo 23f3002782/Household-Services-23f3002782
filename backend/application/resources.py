@@ -1,14 +1,15 @@
-import os
+from flask import current_app as app, jsonify, send_from_directory
 from flask_restful import Resource, reqparse
-from .models import *
-from flask_security import auth_required, roles_required, roles_accepted, hash_password, login_user,current_user, logout_user
-from flask import request, jsonify, send_from_directory
-from flask import current_app as app
-from datetime import datetime
+from flask_security import auth_required, roles_required, roles_accepted, hash_password, login_user, current_user, logout_user
 from flask_security.utils import verify_password
-from celery.result import AsyncResult # type: ignore
+from celery.result import AsyncResult
+from datetime import datetime
+from .models import *
 from .tasks import *
 from .mail import send_email
+
+from flask_caching import Cache
+cache = Cache(app)
 
 def register_resources(api):
     api.add_resource(UsersResource, '/api/users', '/api/users/<int:user_id>')
@@ -160,6 +161,7 @@ class ServiceListResource(Resource):
         self.parser.add_argument('time_required', type=int)
         self.parser.add_argument('description', type=str)
 
+    @cache.cached(timeout=300, key_prefix='services')
     def get(self):
         services = Service.query.all()
         return jsonify([service.to_dict() for service in services])
