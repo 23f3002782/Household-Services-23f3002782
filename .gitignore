@@ -3,6 +3,7 @@
 backend/__pycache__/
 backend/dump.rdb
 backend/exports/
+backend/celerybeat-schedule
 
 backend/.venv
 backend/application/__pycache__

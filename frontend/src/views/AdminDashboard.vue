@@ -126,8 +126,22 @@
 
 		<!-- Service Professionals -->
 		<div v-if="$route.path === '/admin/professionals'">
+			<div class="d-flex justify-content-between align-items-center mb-5">
+				<h2 class="display-5">Service Professionals</h2>
+				<form class="d-flex" role="search" @submit.prevent>
+					<input
+						class="form-control me-2 border-dark"
+						type="search"
+						placeholder="Search professionals"
+						aria-label="Search"
+						v-model="searchQuery"
+						@input="performSearch"
+					/>
+				</form>
+			</div>
+
 			<div v-if="pendingApprovals.length > 0">
-				<h2 class="mb-5 display-5">Pending Approvals</h2>
+				<h2 class="mb-5">Pending Approvals</h2>
 				<div class="table-responsive mt-4 mb-5">
 					<table
 						class="table text-center table-borderless rounded-3 overflow-hidden"
@@ -190,7 +204,6 @@
 				</div>
 			</div>
 
-			<h2 class="mb-5 display-5">Service Professionals</h2>
 			<div class="table-responsive mt-4">
 				<table
 					class="table text-center table-borderless rounded-3 overflow-hidden"
@@ -207,7 +220,9 @@
 					</thead>
 					<tbody class="text-center table-group-divider">
 						<tr
-							v-for="(professional, index) in oldProfessionals"
+							v-for="(
+								professional, index
+							) in filteredProfessionals"
 							:key="index"
 						>
 							<td>{{ index + 1 }}</td>
@@ -223,10 +238,23 @@
 							</td>
 							<td>{{ professional.experience_years }}</td>
 							<td>{{ professional.about }}</td>
-							<td v-if="professional.active">
+							<td
+								v-if="professional.active"
+								class="d-grid gap-2 d-md-flex justify-content-md-center"
+							>
+								<button
+									class="btn btn-sm btn-outline-dark"
+									@click="
+										$router.push(
+											`/professionals/${professional.id}`
+										)
+									"
+								>
+									View
+								</button>
 								<button
 									@click="blockUser(professional.id)"
-									class="btn btn-danger btn-sm"
+									class="btn btn-sm btn-outline-danger btn-sm"
 								>
 									Block
 								</button>
@@ -247,8 +275,8 @@
 
 		<!-- Services Management -->
 		<div v-if="$route.path === '/admin/services'">
-			<div class="d-flex justify-content-between align-items-center">
-				<h2 class="mb-5 display-5">Services Management</h2>
+			<div class="d-flex justify-content-between align-items-center mb-5">
+				<h2 class="display-5">Services Management</h2>
 				<button
 					class="btn btn-dark mb-3"
 					data-bs-toggle="modal"
@@ -514,6 +542,21 @@
 	const notificationStore = useNotificationStore();
 
 	const users = ref([]);
+	const searchQuery = ref("");
+	const filteredProfessionals = ref([]);
+	const performSearch = () => {
+		if (!searchQuery.value.trim()) {
+			filteredProfessionals.value = oldProfessionals.value;
+			return;
+		} else {
+			filteredProfessionals.value = oldProfessionals.value.filter(
+				(professional) =>
+					professional.username
+						.toLowerCase()
+						.includes(searchQuery.value.toLowerCase())
+			);
+		}
+	};
 
 	const customers = computed(() =>
 		users.value.filter((user) => user.role === "customer")
@@ -821,6 +864,7 @@
 		if (route.path === "/admin/dashboard") {
 			initializeChart();
 		}
+		filteredProfessionals.value = oldProfessionals.value;
 	});
 
 	// Cleanup on unmount
