@@ -1,0 +1,718 @@
+# Go to https://editor.swagger.io/ and paste the content of this file to visualize the API documentation
+
+openapi: "3.0.0"
+info:
+    title: Service API
+    version: "1.0.0"
+servers:
+    - url: http://localhost
+components:
+    securitySchemes:
+        bearerAuth:
+            type: http
+            scheme: bearer
+    schemas:
+        ErrorResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+        AuthResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+                token:
+                    type: string
+                user:
+                    type: object
+        Service:
+            type: object
+            properties:
+                id:
+                    type: integer
+                name:
+                    type: string
+                base_price:
+                    type: number
+                    format: float
+                time_required:
+                    type: integer
+                description:
+                    type: string
+                no_of_bookings:
+                    type: integer
+        ServiceRequest:
+            type: object
+            properties:
+                id:
+                    type: integer
+                service_id:
+                    type: integer
+                customer_id:
+                    type: integer
+                professional_id:
+                    type: integer
+                status:
+                    type: string
+                review:
+                    type: string
+                date_of_request:
+                    type: string
+                    format: date-time
+                date_of_completion:
+                    type: string
+                    format: date-time
+        User:
+            type: object
+            properties:
+                id:
+                    type: integer
+                email:
+                    type: string
+                username:
+                    type: string
+                address:
+                    type: string
+                about:
+                    type: string
+                experience_years:
+                    type: integer
+                active:
+                    type: boolean
+                status:
+                    type: string
+paths:
+    /api/signup/customer:
+        post:
+            summary: "Customer Signup"
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required:
+                                - email
+                                - username
+                                - password
+                            properties:
+                                email:
+                                    type: string
+                                username:
+                                    type: string
+                                password:
+                                    type: string
+                                address:
+                                    type: string
+            responses:
+                "201":
+                    description: Customer registered successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/AuthResponse"
+                "400":
+                    description: User already exists
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                "500":
+                    description: Registration error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+    /api/signup/service_professional:
+        post:
+            summary: "Service Professional Signup"
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required:
+                                - email
+                                - username
+                                - password
+                                - service_id
+                            properties:
+                                email:
+                                    type: string
+                                username:
+                                    type: string
+                                password:
+                                    type: string
+                                service_id:
+                                    type: integer
+                                about:
+                                    type: string
+                                experience_years:
+                                    type: integer
+            responses:
+                "201":
+                    description: Request sent to admin for approval
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                "400":
+                    description: User already exists or invalid data
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                "500":
+                    description: Registration error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+    /api/login:
+        post:
+            summary: "User Login"
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required:
+                                - email
+                                - password
+                            properties:
+                                email:
+                                    type: string
+                                password:
+                                    type: string
+            responses:
+                "200":
+                    description: Login successful
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/AuthResponse"
+                "401":
+                    description: Invalid credentials or account deactivated
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+    /api/logout:
+        post:
+            summary: "User Logout"
+            security:
+                - bearerAuth: []
+            responses:
+                "200":
+                    description: Logged out successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+    /api/services:
+        get:
+            summary: "Get All Services"
+            responses:
+                "200":
+                    description: A list of services
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/Service"
+        post:
+            summary: "Create a New Service"
+            security:
+                - bearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                base_price:
+                                    type: number
+                                    format: float
+                                time_required:
+                                    type: integer
+                                description:
+                                    type: string
+            responses:
+                "200":
+                    description: Service created successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Service"
+                "400":
+                    description: Service with this name already exists
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+    /api/services/{service_id}:
+        parameters:
+            - in: path
+              name: service_id
+              required: true
+              schema:
+                  type: integer
+        get:
+            summary: "Get a Service by ID"
+            responses:
+                "200":
+                    description: Service details
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Service"
+                "404":
+                    description: Service not found
+        put:
+            summary: "Update a Service"
+            security:
+                - bearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                base_price:
+                                    type: number
+                                    format: float
+                                time_required:
+                                    type: integer
+                                description:
+                                    type: string
+            responses:
+                "200":
+                    description: Service updated successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Service"
+                "400":
+                    description: Validation error (e.g., duplicate service name)
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+        delete:
+            summary: "Delete a Service"
+            security:
+                - bearerAuth: []
+            responses:
+                "200":
+                    description: Service deleted successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+    /api/customer/service-requests:
+        get:
+            summary: "Get All Service Requests for Customer"
+            security:
+                - bearerAuth: []
+            responses:
+                "200":
+                    description: List of customer service requests
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/ServiceRequest"
+        post:
+            summary: "Create a Service Request"
+            security:
+                - bearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required:
+                                - service_id
+                                - date_of_request
+                            properties:
+                                service_id:
+                                    type: integer
+                                date_of_request:
+                                    type: string
+                                    format: date-time
+                                review:
+                                    type: string
+            responses:
+                "200":
+                    description: Service request created successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+    /api/customer/service-requests/{request_id}:
+        parameters:
+            - in: path
+              name: request_id
+              required: true
+              schema:
+                  type: integer
+        get:
+            summary: "Get a Specific Service Request for Customer"
+            security:
+                - bearerAuth: []
+            responses:
+                "200":
+                    description: Service request details
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ServiceRequest"
+        put:
+            summary: "Update a Service Request for Customer"
+            security:
+                - bearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                date_of_request:
+                                    type: string
+                                    format: date-time
+                                review:
+                                    type: string
+            responses:
+                "200":
+                    description: Service request updated successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+        delete:
+            summary: "Delete a Service Request for Customer"
+            security:
+                - bearerAuth: []
+            responses:
+                "200":
+                    description: Service request deleted successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+    /api/professional/service-requests:
+        get:
+            summary: "Get All Service Requests for Professional"
+            security:
+                - bearerAuth: []
+            responses:
+                "200":
+                    description: List of professional service requests
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/ServiceRequest"
+    /api/professional/service-requests/{request_id}:
+        parameters:
+            - in: path
+              name: request_id
+              required: true
+              schema:
+                  type: integer
+        get:
+            summary: "Get a Specific Service Request for Professional"
+            security:
+                - bearerAuth: []
+            responses:
+                "200":
+                    description: Service request details
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ServiceRequest"
+        post:
+            summary: "Assign Service Request to Professional"
+            security:
+                - bearerAuth: []
+            responses:
+                "200":
+                    description: Service request assigned successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+        put:
+            summary: "Update a Service Request for Professional"
+            security:
+                - bearerAuth: []
+            responses:
+                "200":
+                    description: Service request updated successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+    /api/service-requests:
+        get:
+            summary: "Get All Service Requests (Admin, Professional, or Customer)"
+            security:
+                - bearerAuth: []
+            responses:
+                "200":
+                    description: List of service requests
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/ServiceRequest"
+    /api/service-requests/{request_id}:
+        parameters:
+            - in: path
+              name: request_id
+              required: true
+              schema:
+                  type: integer
+        get:
+            summary: "Get a Specific Service Request"
+            security:
+                - bearerAuth: []
+            responses:
+                "200":
+                    description: Service request details
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ServiceRequest"
+    /api/users:
+        get:
+            summary: "Get All Users"
+            security:
+                - bearerAuth: []
+            responses:
+                "200":
+                    description: List of users
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/User"
+    /api/users/{user_id}:
+        parameters:
+            - in: path
+              name: user_id
+              required: true
+              schema:
+                  type: integer
+        get:
+            summary: "Get a Specific User"
+            security:
+                - bearerAuth: []
+            responses:
+                "200":
+                    description: User details
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/User"
+    /api/professionals/{user_id}/approval:
+        parameters:
+            - in: path
+              name: user_id
+              required: true
+              schema:
+                  type: integer
+        put:
+            summary: "Approve or Reject a Service Professional"
+            security:
+                - bearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required:
+                                - action
+                            properties:
+                                action:
+                                    type: string
+                                    enum: [approve, reject]
+            responses:
+                "200":
+                    description: Approval processed successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                "400":
+                    description: Invalid action or user is not a service professional
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+                "500":
+                    description: Server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+    /api/users/{user_id}/block:
+        parameters:
+            - in: path
+              name: user_id
+              required: true
+              schema:
+                  type: integer
+        put:
+            summary: "Block a User"
+            security:
+                - bearerAuth: []
+            responses:
+                "200":
+                    description: User blocked successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+    /api/users/{user_id}/unblock:
+        parameters:
+            - in: path
+              name: user_id
+              required: true
+              schema:
+                  type: integer
+        put:
+            summary: "Unblock a User"
+            security:
+                - bearerAuth: []
+            responses:
+                "200":
+                    description: User unblocked successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+    /api/users/me/profile:
+        put:
+            summary: "Update Own User Profile"
+            security:
+                - bearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                id:
+                                    type: integer
+                                username:
+                                    type: string
+                                address:
+                                    type: string
+                                about:
+                                    type: string
+                                experience_years:
+                                    type: integer
+            responses:
+                "200":
+                    description: Profile updated successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    user:
+                                        $ref: "#/components/schemas/User"
+                "500":
+                    description: Update error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ErrorResponse"
+    /api/export/request_details:
+        post:
+            summary: "Export Service Requests - Start Export Task"
+            security:
+                - bearerAuth: []
+            responses:
+                "200":
+                    description: Export initiated via Celery
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                    id:
+                                        type: string
+    /api/export/status/{id}:
+        parameters:
+            - in: path
+              name: id
+              required: true
+              schema:
+                  type: string
+        get:
+            summary: "Download Exported Service Requests"
+            responses:
+                "200":
+                    description: File download as attachment
+                    content:
+                        application/octet-stream:
+                            schema:
+                                type: string
+                                format: binary

@@ -340,14 +340,14 @@
 				role="dialog"
 			>
 				<div class="modal-dialog">
-					<div class="modal-content bg-dark text-light">
+					<div class="modal-content">
 						<div class="modal-header border-secondary">
 							<h5 class="modal-title" id="addServiceModalLabel">
 								Add New Service
 							</h5>
 							<button
 								type="button"
-								class="btn-close btn-close-white"
+								class="btn-close"
 								data-bs-dismiss="modal"
 								aria-label="Close"
 							></button>
@@ -360,7 +360,7 @@
 									>
 									<input
 										type="text"
-										class="form-control bg-dark text-light border-secondary"
+										class="form-control"
 										id="service_name"
 										v-model="service_name"
 										required
@@ -372,7 +372,7 @@
 									>
 									<input
 										type="number"
-										class="form-control bg-dark text-light border-secondary"
+										class="form-control"
 										id="base_price"
 										v-model="base_price"
 										required
@@ -386,7 +386,7 @@
 									>
 									<input
 										type="number"
-										class="form-control bg-dark text-light border-secondary"
+										class="form-control"
 										id="time_required"
 										v-model="time_required"
 										required
@@ -398,7 +398,7 @@
 									>
 									<input
 										type="text"
-										class="form-control bg-dark text-light border-secondary"
+										class="form-control"
 										id="description"
 										v-model="description"
 										required
@@ -407,12 +407,12 @@
 								<div class="text-end mt-4">
 									<button
 										type="button"
-										class="btn btn-outline-light me-2"
+										class="btn btn-outline-dark me-2"
 										data-bs-dismiss="modal"
 									>
 										Close
 									</button>
-									<button type="submit" class="btn btn-light">
+									<button type="submit" class="btn btn-dark">
 										Add Service
 									</button>
 								</div>
@@ -431,14 +431,14 @@
 				role="dialog"
 			>
 				<div class="modal-dialog">
-					<div class="modal-content bg-dark text-light">
+					<div class="modal-content">
 						<div class="modal-header border-secondary">
 							<h5 class="modal-title" id="editServiceModalLabel">
 								Edit Service
 							</h5>
 							<button
 								type="button"
-								class="btn-close btn-close-white"
+								class="btn-close"
 								data-bs-dismiss="modal"
 								aria-label="Close"
 							></button>
@@ -453,7 +453,7 @@
 									>
 									<input
 										type="text"
-										class="form-control bg-dark text-light border-secondary"
+										class="form-control"
 										id="edit_service_name"
 										v-model="edit_service_name"
 										required
@@ -467,7 +467,7 @@
 									>
 									<input
 										type="number"
-										class="form-control bg-dark text-light border-secondary"
+										class="form-control"
 										id="edit_base_price"
 										v-model="edit_base_price"
 										required
@@ -481,7 +481,7 @@
 									>
 									<input
 										type="number"
-										class="form-control bg-dark text-light border-secondary"
+										class="form-control"
 										id="edit_time_required"
 										v-model="edit_time_required"
 										required
@@ -495,7 +495,7 @@
 									>
 									<input
 										type="text"
-										class="form-control bg-dark text-light border-secondary"
+										class="form-control"
 										id="edit_description"
 										v-model="edit_description"
 										required
@@ -504,12 +504,12 @@
 								<div class="text-end mt-4">
 									<button
 										type="button"
-										class="btn btn-outline-light me-2"
+										class="btn btn-outline-dark me-2"
 										data-bs-dismiss="modal"
 									>
 										Cancel
 									</button>
-									<button type="submit" class="btn btn-light">
+									<button type="submit" class="btn btn-dark">
 										Update Service
 									</button>
 								</div>
