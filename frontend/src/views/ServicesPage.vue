@@ -4,7 +4,7 @@
 			<h1 class="display-5">Our Services</h1>
 			<form class="d-flex" role="search" @submit.prevent>
 				<input
-					class="form-control me-2 border-dark"
+					class="form-control me-2"
 					type="search"
 					placeholder="Search services"
 					aria-label="Search"
@@ -26,7 +26,7 @@
 					class="col"
 				>
 					<div
-						class="card h-100"
+						class="card h-100 shadow border-0 rounded-3"
 						@click="selectService(service.id)"
 						data-bs-toggle="modal"
 						data-bs-target="#bookServiceModal"
@@ -73,7 +73,7 @@
 					class="col"
 				>
 					<div
-						class="card h-100"
+						class="card h-100 shadow border-0 rounded-3"
 						data-bs-toggle="modal"
 						data-bs-target="#loginModal"
 						data-bs-theme="light"
@@ -233,10 +233,6 @@
 <style scoped>
 	.card {
 		transition: all 0.2s ease-in-out;
-		border: none;
-		background-color: #fff;
-		border-radius: 18px;
-		box-shadow: 2px 4px 12px #00000014;
 	}
 
 	.card:hover {

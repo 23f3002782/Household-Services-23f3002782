@@ -18,9 +18,12 @@
 			</div>
 			<div v-else>
 				<h3 class="mb-4">On Going Requests...</h3>
-				<div class="table-responsive">
+				<div
+					class="table-responsive shadow rounded px-3"
+					style="background-color: #fff"
+				>
 					<table
-						class="table text-center table-borderless align-middle rounded-3 overflow-hidden"
+						class="table text-center table-borderless align-middle"
 					>
 						<thead>
 							<tr>
@@ -79,7 +82,9 @@
 			<div class="row g-4">
 				<!-- Profile Card -->
 				<div class="col-md-4">
-					<div class="card text-center h-100">
+					<div
+						class="card text-center h-100 shadow border-0 rounded-3"
+					>
 						<div
 							class="card-body d-flex flex-column justify-content-center align-items-center"
 						>
@@ -100,7 +105,7 @@
 
 				<!-- Profile Form -->
 				<div class="col-md-8">
-					<div class="card h-100">
+					<div class="card h-100 shadow border-0 rounded-3">
 						<div
 							class="card-header d-flex justify-content-between align-items-center"
 						>
@@ -210,10 +215,12 @@
 			<div v-if="newRequests.length === 0">
 				<h3 class="text-center">No new requests</h3>
 			</div>
-			<div v-else class="table-responsive">
-				<table
-					class="table text-center table-borderless align-middle rounded-3 overflow-hidden"
-				>
+			<div
+				v-else
+				class="table-responsive shadow rounded px-3"
+				style="background-color: #fff"
+			>
+				<table class="table text-center table-borderless align-middle">
 					<thead>
 						<tr>
 							<th>ID</th>
@@ -438,20 +445,6 @@
 </script>
 
 <style scoped>
-	.card {
-		border: none;
-		background-color: #fff;
-		border-radius: 18px;
-		box-shadow: 2px 4px 12px #00000014;
-	}
-
-	.table {
-		border: none;
-		border-radius: 18px;
-		box-shadow: 2px 4px 12px #00000014;
-		overflow-x: auto;
-	}
-
 	.badge {
 		font-size: 0.9rem;
 		padding: 0.5rem 1rem;

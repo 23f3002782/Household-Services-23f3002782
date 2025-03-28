@@ -23,6 +23,11 @@
 </template>
 
 <style>
+	*:focus {
+		box-shadow: none !important;
+		outline: none !important;
+	}
+
 	body {
 		background-color: #f5f5f7;
 	}

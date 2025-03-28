@@ -5,10 +5,10 @@
 			<h2 class="mb-5 display-5">Dashboard</h2>
 
 			<div class="row mt-4">
-				<div class="col-6 p-4">
+				<div class="col p-4 mb-5">
 					<div class="row row-cols-1 row-cols-md-2 g-4">
 						<div class="col">
-							<div class="card h-100">
+							<div class="card h-100 shadow border-0 rounded-3">
 								<div class="card-body">
 									<h5 class="card-title">Users</h5>
 									<h2 class="card-text">
@@ -18,7 +18,7 @@
 							</div>
 						</div>
 						<div class="col">
-							<div class="card h-100">
+							<div class="card h-100 shadow border-0 rounded-3">
 								<div class="card-body">
 									<h5 class="card-title">
 										Active Professionals
@@ -30,7 +30,7 @@
 							</div>
 						</div>
 						<div class="col">
-							<div class="card h-100">
+							<div class="card h-100 shadow border-0 rounded-3">
 								<div class="card-body">
 									<h5 class="card-title">
 										Pending Approvals
@@ -42,7 +42,7 @@
 							</div>
 						</div>
 						<div class="col">
-							<div class="card h-100">
+							<div class="card h-100 shadow border-0 rounded-3">
 								<div class="card-body">
 									<h5 class="card-title">Total Services</h5>
 									<h2 class="card-text">
@@ -51,29 +51,28 @@
 								</div>
 							</div>
 						</div>
-						<div class="row mt-4">
-							<div class="col">
-								<div class="card">
-									<div class="card-body">
-										<h5 class="card-title">
-											Active requests
-										</h5>
-										<h2 class="card-text">
-											<button
-												@click="downloadReport"
-												class="btn btn-outline-dark"
-											>
-												Download
-											</button>
-										</h2>
-									</div>
+						<div class="row mt-5">
+							<div class="col-12 text-center">
+								<div
+									class="d-flex flex-column align-items-center"
+								>
+									<p class="mb-3 text-muted">
+										Click here to download the CSV file for
+										all active requests.
+									</p>
+									<button
+										@click="downloadReport"
+										class="btn btn-outline-dark shadow"
+									>
+										Download CSV
+									</button>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
-				<div class="col-6">
-					<div style="height: 400px; width: 100%">
+				<div class="col">
+					<div style="height: 450px; width: 100%">
 						<canvas id="myChart"></canvas>
 					</div>
 				</div>
@@ -83,10 +82,11 @@
 		<!-- Users Management -->
 		<div v-if="$route.path === '/admin/customers'">
 			<h2 class="mb-5 display-5">Customers</h2>
-			<div class="table-responsive mt-4">
-				<table
-					class="table text-center table-borderless rounded-3 overflow-hidden"
-				>
+			<div
+				class="table-responsive mt-4 shadow rounded px-3"
+				style="background-color: #fff"
+			>
+				<table class="table text-center table-borderless">
 					<thead>
 						<tr>
 							<th>ID</th>
@@ -105,7 +105,7 @@
 							<td v-if="customer.active">
 								<button
 									@click="blockUser(customer.id)"
-									class="btn btn-danger btn-sm"
+									class="btn btn-outline-danger btn-sm"
 								>
 									Block
 								</button>
@@ -113,7 +113,7 @@
 							<td v-else>
 								<button
 									@click="unblockUser(customer.id)"
-									class="btn btn-success btn-sm"
+									class="btn btn-outline-info btn-sm"
 								>
 									Unblock
 								</button>
@@ -130,7 +130,7 @@
 				<h2 class="display-5">Service Professionals</h2>
 				<form class="d-flex" role="search" @submit.prevent>
 					<input
-						class="form-control me-2 border-dark"
+						class="form-control me-2"
 						type="search"
 						placeholder="Search professionals"
 						aria-label="Search"
@@ -142,10 +142,11 @@
 
 			<div v-if="pendingApprovals.length > 0">
 				<h2 class="mb-5">Pending Approvals</h2>
-				<div class="table-responsive mt-4 mb-5">
-					<table
-						class="table text-center table-borderless rounded-3 overflow-hidden"
-					>
+				<div
+					class="table-responsive mt-4 mb-5 shadow rounded px-3"
+					style="background-color: #fff"
+				>
+					<table class="table text-center table-borderless">
 						<thead>
 							<tr>
 								<th>ID</th>
@@ -155,7 +156,7 @@
 								<th>Actions</th>
 							</tr>
 						</thead>
-						<tbody class="table-group-divider">
+						<tbody>
 							<tr
 								v-for="(
 									professional, index
@@ -204,10 +205,11 @@
 				</div>
 			</div>
 
-			<div class="table-responsive mt-4">
-				<table
-					class="table text-center table-borderless rounded-3 overflow-hidden"
-				>
+			<div
+				class="table-responsive mt-4 shadow rounded px-3"
+				style="background-color: #fff"
+			>
+				<table class="table text-center table-borderless">
 					<thead>
 						<tr>
 							<th>ID</th>
@@ -215,10 +217,10 @@
 							<th>Service</th>
 							<th>Experience</th>
 							<th>About</th>
-							<th>Actions</th>
+							<th colspan="2">Actions</th>
 						</tr>
 					</thead>
-					<tbody class="text-center table-group-divider">
+					<tbody>
 						<tr
 							v-for="(
 								professional, index
@@ -238,10 +240,7 @@
 							</td>
 							<td>{{ professional.experience_years }}</td>
 							<td>{{ professional.about }}</td>
-							<td
-								v-if="professional.active"
-								class="d-grid gap-2 d-md-flex justify-content-md-center"
-							>
+							<td>
 								<button
 									class="btn btn-sm btn-outline-dark"
 									@click="
@@ -252,17 +251,19 @@
 								>
 									View
 								</button>
+							</td>
+							<td>
 								<button
+									v-if="professional.active"
 									@click="blockUser(professional.id)"
 									class="btn btn-sm btn-outline-danger btn-sm"
 								>
 									Block
 								</button>
-							</td>
-							<td v-else>
 								<button
+									v-else
 									@click="unblockUser(professional.id)"
-									class="btn btn-success btn-sm"
+									class="btn btn-outline-info btn-sm"
 								>
 									Unblock
 								</button>
@@ -285,10 +286,11 @@
 					Add New Service
 				</button>
 			</div>
-			<div class="table-responsive">
-				<table
-					class="table text-center align-middle table-borderless rounded-3 overflow-hidden"
-				>
+			<div
+				class="table-responsive shadow rounded px-3"
+				style="background-color: #fff"
+			>
+				<table class="table text-center align-middle table-borderless">
 					<thead>
 						<tr>
 							<th>ID</th>
@@ -296,35 +298,33 @@
 							<th>Base Price</th>
 							<th>Time Required</th>
 							<th>Description</th>
-							<th>Actions</th>
+							<th colspan="2">Actions</th>
 						</tr>
 					</thead>
-					<tbody class="table-group-divider">
+					<tbody>
 						<tr v-for="service in services" :key="service.id">
 							<td>{{ service.id }}</td>
 							<td>{{ service.name }}</td>
 							<td>₹{{ service.base_price }}</td>
 							<td>{{ service.time_required }} hrs</td>
 							<td>{{ service.description }}</td>
-							<td class="py-3">
-								<div
-									class="d-grid gap-2 d-md-flex justify-content-md-center"
+							<td>
+								<button
+									class="btn btn-outline-warning btn-sm px-3"
+									@click="startEdit(service)"
+									data-bs-toggle="modal"
+									data-bs-target="#editServiceModal"
 								>
-									<button
-										class="btn btn-outline-warning btn-sm px-3"
-										@click="startEdit(service)"
-										data-bs-toggle="modal"
-										data-bs-target="#editServiceModal"
-									>
-										Edit
-									</button>
-									<button
-										class="btn btn-outline-danger btn-sm px-3"
-										@click="deleteService(service.id)"
-									>
-										Delete
-									</button>
-								</div>
+									Edit
+								</button>
+							</td>
+							<td>
+								<button
+									class="btn btn-outline-danger btn-sm px-3"
+									@click="deleteService(service.id)"
+								>
+									Delete
+								</button>
 							</td>
 						</tr>
 					</tbody>
@@ -456,7 +456,6 @@
 										class="form-control"
 										id="edit_service_name"
 										v-model="edit_service_name"
-										required
 									/>
 								</div>
 								<div class="mb-3">
@@ -470,7 +469,6 @@
 										class="form-control"
 										id="edit_base_price"
 										v-model="edit_base_price"
-										required
 									/>
 								</div>
 								<div class="mb-3">
@@ -484,7 +482,6 @@
 										class="form-control"
 										id="edit_time_required"
 										v-model="edit_time_required"
-										required
 									/>
 								</div>
 								<div class="mb-3">
@@ -493,12 +490,11 @@
 										class="form-label"
 										>Description</label
 									>
-									<input
+									<textarea
 										type="text"
 										class="form-control"
 										id="edit_description"
 										v-model="edit_description"
-										required
 									/>
 								</div>
 								<div class="text-end mt-4">
@@ -707,6 +703,7 @@
 			}
 
 			await fetchUsers();
+			performSearch();
 			notificationStore.addNotification({
 				message: "User blocked",
 				type: "info",
@@ -734,6 +731,7 @@
 			}
 
 			await fetchUsers();
+			performSearch();
 			notificationStore.addNotification({
 				message: "User Unblocked",
 				type: "success",
@@ -755,8 +753,6 @@
 			});
 
 			if (!response.ok) {
-				const text = await response.text();
-				console.error("Error response:", text);
 				throw new Error(`Server error: ${response.status}`);
 			}
 
@@ -874,21 +870,3 @@
 		}
 	});
 </script>
-
-<style scoped>
-	.card {
-		border: none;
-		background-color: #fff;
-		border-radius: 18px;
-		box-shadow: 2px 4px 12px #00000090;
-		overflow: hidden;
-	}
-
-	table {
-		border: none;
-		background-color: #fff;
-		border-radius: 18px;
-		box-shadow: 2px 4px 12px #00000090;
-		overflow: hidden;
-	}
-</style>

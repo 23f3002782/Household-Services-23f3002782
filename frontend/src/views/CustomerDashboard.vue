@@ -25,16 +25,19 @@
 			<div v-else>
 				<div v-if="requestedBookings.length > 0">
 					<h3>Requested Bookings</h3>
-					<div class="table-responsive mt-4 mb-5">
+					<div
+						class="table-responsive mt-4 mb-5 shadow rounded px-3"
+						style="background-color: #fff"
+					>
 						<table
-							class="table text-center rounded-3 table-borderless overflow-hidden align-middle"
+							class="table text-center table-borderless align-middle"
 						>
 							<thead>
 								<tr>
 									<th>ID</th>
 									<th>Service</th>
 									<th>Date of Request</th>
-									<th>Actions</th>
+									<th colspan="2">Actions</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -53,31 +56,25 @@
 											)[0]
 										}}
 									</td>
-									<td>
-										<div
-											class="d-grid gap-2 d-md-flex justify-content-md-center"
+									<td class="text-end">
+										<button
+											class="btn btn-outline-warning btn-sm"
+											data-bs-toggle="modal"
+											data-bs-target="#editBookingModal"
+											@click="
+												startEditingBooking(booking.id)
+											"
 										>
-											<button
-												class="btn btn-outline-warning btn-sm"
-												data-bs-toggle="modal"
-												data-bs-target="#editBookingModal"
-												@click="
-													startEditingBooking(
-														booking.id
-													)
-												"
-											>
-												Edit
-											</button>
-											<button
-												class="btn btn-outline-danger btn-sm"
-												@click="
-													deleteBooking(booking.id)
-												"
-											>
-												Delete
-											</button>
-										</div>
+											Edit
+										</button>
+									</td>
+									<td class="text-start">
+										<button
+											class="btn btn-outline-danger btn-sm"
+											@click="deleteBooking(booking.id)"
+										>
+											Delete
+										</button>
 									</td>
 								</tr>
 							</tbody>
@@ -87,7 +84,10 @@
 
 				<div v-if="assignedBookings.length > 0">
 					<h3>Ongoing Bookings</h3>
-					<div class="table-responsive mt-4 mb-5">
+					<div
+						class="table-responsive shadow rounded px-3"
+						style="background-color: #fff"
+					>
 						<table
 							class="table text-center rounded-3 table-borderless overflow-hidden align-middle"
 						>
@@ -96,7 +96,7 @@
 									<th>ID</th>
 									<th>Service</th>
 									<th>Date of Service</th>
-									<th>Professional</th>
+									<th colspan="2">Professional</th>
 									<th>Status</th>
 									<th>Actions</th>
 								</tr>
@@ -115,22 +115,18 @@
 											)[0]
 										}}
 									</td>
-									<td>
-										<div
-											class="d-grid gap-2 d-md-flex justify-content-md-center"
+									<td>{{ booking.professional.username }}</td>
+									<td class="text-start">
+										<button
+											@click="
+												$router.push(
+													`/professionals/${booking.professional.id}`
+												)
+											"
+											class="btn btn-outline-dark btn-sm"
 										>
-											{{ booking.professional.username }}
-											<button
-												@click="
-													$router.push(
-														`/professionals/${booking.professional.id}`
-													)
-												"
-												class="btn btn-outline-dark btn-sm"
-											>
-												View
-											</button>
-										</div>
+											View
+										</button>
 									</td>
 									<td>
 										{{
@@ -141,31 +137,16 @@
 										}}
 									</td>
 									<td>
-										<div
-											class="d-grid gap-2 d-md-flex justify-content-md-center"
+										<button
+											class="btn btn-outline-success btn-sm"
+											data-bs-toggle="modal"
+											data-bs-target="#reviewModal"
+											@click="
+												startEditingBooking(booking.id)
+											"
 										>
-											<!-- <button
-                        v-if="booking.status !== 'closed_by_professional'"
-                        class="btn btn-outline-warning btn-sm"
-                        data-bs-toggle="modal"
-                        data-bs-target="#editBookingModal"
-                        @click="startEditingBooking(booking.id)"
-                      >
-                        Edit
-                      </button> -->
-											<button
-												class="btn btn-outline-success btn-sm"
-												data-bs-toggle="modal"
-												data-bs-target="#reviewModal"
-												@click="
-													startEditingBooking(
-														booking.id
-													)
-												"
-											>
-												Close
-											</button>
-										</div>
+											Close
+										</button>
 									</td>
 								</tr>
 							</tbody>
@@ -177,12 +158,11 @@
 
 		<!-- Edit Booking Modal -->
 		<div
-			class="modal fade text-light"
+			class="modal fade"
 			id="editBookingModal"
 			tabindex="-1"
 			aria-labelledby="editBookingModalLabel"
 			aria-hidden="true"
-			data-bs-theme="dark"
 		>
 			<div class="modal-dialog">
 				<div class="modal-content">
@@ -211,14 +191,24 @@
 									required
 								/>
 							</div>
-							<button
+							<!-- <button
 								type="submit"
-								class="btn btn-outline-light"
+								class="btn btn-outline-dark"
 								data-bs-dismiss="modal"
 							>
 								Save Changes
-							</button>
+							</button> -->
 						</form>
+					</div>
+					<div class="modal-footer">
+						<button
+							type="submit"
+							class="btn btn-outline-dark"
+							data-bs-dismiss="modal"
+							@click="editBooking"
+						>
+							Save Changes
+						</button>
 					</div>
 				</div>
 			</div>
@@ -230,7 +220,9 @@
 			<div class="row g-4">
 				<!-- Profile Card -->
 				<div class="col-md-4">
-					<div class="card text-center h-100">
+					<div
+						class="card text-center h-100 shadow border-0 rounded-3"
+					>
 						<div
 							class="card-body d-flex flex-column justify-content-center align-items-center"
 						>
@@ -251,7 +243,7 @@
 
 				<!-- Profile Form -->
 				<div class="col-md-8">
-					<div class="card h-100">
+					<div class="card h-100 shadow border-0 rounded-3">
 						<div
 							class="card-header d-flex justify-content-between align-items-center"
 						>
@@ -474,6 +466,7 @@
 				{
 					method: "PUT",
 					headers: {
+						"Content-Type": "application/json",
 						Authorization: authStore.token,
 					},
 					body: JSON.stringify({
@@ -484,6 +477,10 @@
 			if (!response.ok) {
 				throw new Error("Failed to edit booking");
 			}
+			notificationStore.addNotification({
+				message: "Service date updated",
+				type: "success",
+			});
 			editingBookingId.value = null;
 			await fetchBookings();
 		} catch (error) {
@@ -557,14 +554,6 @@
 </script>
 
 <style scoped>
-	.card {
-		border: none;
-		background-color: #fff;
-		border-radius: 18px;
-		box-shadow: 2px 4px 12px #00000014;
-		overflow: hidden;
-	}
-
 	.badge {
 		font-size: 0.9rem;
 		padding: 0.5rem 1rem;
