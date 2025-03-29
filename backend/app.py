@@ -210,7 +210,7 @@ def setup_periodic_tasks(sender, **kwargs):
         monthly_report.s(),
     )
     sender.add_periodic_task(
-        crontab(minute = '*/1'),
+        crontab(minute = '*/3'),
         remind_professional.s()
     )
 
