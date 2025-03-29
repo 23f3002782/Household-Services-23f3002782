@@ -268,7 +268,7 @@ class CustomerServiceRequestsResource(Resource):
                 request.status = "closed"
             else:
                 status_update.delay(f"Hi {request.professional.username}, customer has closed the service request.")
-                send_email(request.professional.email, 'Service Request Closed', f"Hi {request.professional.username}, {request.customer.username} has closed the service request.")
+                # send_email(request.professional.email, 'Service Request Closed', f"Hi {request.professional.username}, {request.customer.username} has closed the service request.")
                 request.status = "closed by customer"
                 request.date_of_completion = datetime.now()
                 request.service.no_of_bookings += 1
@@ -312,7 +312,7 @@ class ProfessionalServiceRequestsResource(Resource):
             request.status = 'closed'
         else:
             request.status = 'closed by professional'
-            status_update.delay(f"Hi {request.customer.username}, our service professional has closed the service request.")
+            # status_update.delay(f"Hi {request.customer.username}, our service professional has closed the service request.")
             send_email(request.customer.email, 'Service Request Closed', f"Hi {request.customer.username}, our service professional has closed the service request.")
             request.date_of_completion = datetime.now()
             request.service.no_of_bookings += 1

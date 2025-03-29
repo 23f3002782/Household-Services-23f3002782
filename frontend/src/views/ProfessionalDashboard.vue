@@ -1,5 +1,5 @@
 <template>
-	<div class="container p-5">
+	<div class="container py-5">
 		<!-- Dashboard Section -->
 		<div v-if="$route.path === '/professional/dashboard'" class="pt-3">
 			<h1 class="mb-5 display-5">Dashboard</h1>
@@ -17,7 +17,7 @@
 				</div>
 			</div>
 			<div v-else>
-				<h3 class="mb-4">On Going Requests...</h3>
+				<h3 class="mb-3">On Going Requests</h3>
 				<div
 					class="table-responsive shadow rounded px-3"
 					style="background-color: #fff"
@@ -90,7 +90,7 @@
 						>
 							<div class="mb-4">
 								<img
-									src="https://api.dicebear.com/9.x/avataaars/svg?seed=Christopher&eyebrows=default&eyes=default&facialHair[]&facialHairColor[]&mouth=default&skinColor=edb98a&top=dreads01,dreads02,frida,frizzle,froBand,hat,miaWallace,shaggy,shaggyMullet,shavedSides,shortCurly,sides,straight02,straightAndStrand"
+									:src="img_src"
 									alt="Profile Avatar"
 									class="rounded-circle mb-3 border border-2 border-dark"
 									width="120"
@@ -326,6 +326,8 @@
 		}
 	};
 	// Profile Section
+	const img_src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${authStore.user.id}&accessories[]&accessoriesColor[]&clothing=blazerAndShirt,blazerAndSweater,collarAndSweater,overall,shirtCrewNeck,shirtScoopNeck,hoodie,graphicShirt,shirtVNeck&eyebrows=default&eyes=default&facialHairColor=2c1b18,4a312c,a55728&hairColor=2c1b18,724133,a55728,b58143,d6b370,ecdcbf&hatColor[]&mouth=default&skinColor=d08b5b,ffdbb4,fd9841,edb98a&top=bigHair,bob,bun,curly,dreads,fro,longButNotTooLong,miaWallace,straight02,straight01,straightAndStrand`;
+
 	const isEditing = ref(false);
 	const profile = ref({
 		username: authStore.user.username,

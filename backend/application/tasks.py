@@ -85,7 +85,7 @@ def monthly_report():
     customer_role = Role.query.filter_by(name = 'customer').first()
     users = customer_role.bearer
     for user in users:
-        requests = ServiceRequest.query.filter_by(customer_id = user.id).all()
+        requests = ServiceRequest.query.filter_by(customer_id = user.id, status="closed").all()
         if len(requests) == 0:
             message = f"Hi {user.username}, you have not made any service requests this month. Please check the app for more details."
             send_email(user.email, subject='Monthly Report - Havenly', message=message)

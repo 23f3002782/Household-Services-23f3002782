@@ -3,13 +3,13 @@
 		<div class="row g-4">
 			<!-- Professional Card -->
 			<div class="col-md-4">
-				<div class="card text-center h-100">
+				<div class="card text-center h-100 shadow border-0 rounded-3">
 					<div
 						class="card-body d-flex flex-column justify-content-center align-items-center"
 					>
 						<div class="mb-4">
 							<img
-								:src="`https://api.dicebear.com/9.x/avataaars/svg?seed=${professional?.username}`"
+								:src="`https://api.dicebear.com/7.x/avataaars/svg?seed=${professional?.id}&accessories[]&accessoriesColor[]&clothing=blazerAndShirt,blazerAndSweater,collarAndSweater,overall,shirtCrewNeck,shirtScoopNeck,hoodie,graphicShirt,shirtVNeck&eyebrows=default&eyes=default&facialHairColor=2c1b18,4a312c,a55728&hairColor=2c1b18,724133,a55728,b58143,d6b370,ecdcbf&hatColor[]&mouth=default&skinColor=d08b5b,ffdbb4,fd9841,edb98a&top=bigHair,bob,bun,curly,dreads,fro,longButNotTooLong,miaWallace,straight02,straight01,straightAndStrand`"
 								alt="Profile Avatar"
 								class="rounded-circle mb-3 border border-2 border-dark"
 								width="120"
@@ -31,7 +31,7 @@
 
 			<!-- Professional Details -->
 			<div class="col-md-8">
-				<div class="card h-100">
+				<div class="card h-100 shadow border-0 rounded-3">
 					<div class="card-header">
 						<h5 class="mb-0">Professional Information</h5>
 					</div>
@@ -62,7 +62,7 @@
 
 			<!-- Reviews Section -->
 			<div class="col-12">
-				<div class="card">
+				<div class="card shadow border-0 rounded-3">
 					<div class="card-header">
 						<h5 class="mb-0">Reviews</h5>
 					</div>
@@ -83,7 +83,7 @@
 									class="d-flex align-items-start border-bottom pb-3"
 								>
 									<img
-										:src="`https://api.dicebear.com/9.x/avataaars/svg?seed=${review.customer.username}`"
+										:src="`https://api.dicebear.com/7.x/avataaars/svg?seed=${review.customer.id}&accessories[]&accessoriesColor[]&clothing=blazerAndShirt,blazerAndSweater,collarAndSweater,overall,shirtCrewNeck,shirtScoopNeck,hoodie,graphicShirt,shirtVNeck&eyebrows=default&eyes=default&facialHairColor=2c1b18,4a312c,a55728&hairColor=2c1b18,724133,a55728,b58143,d6b370,ecdcbf&hatColor[]&mouth=default&skinColor=d08b5b,ffdbb4,fd9841,edb98a&top=bigHair,bob,bun,curly,dreads,fro,longButNotTooLong,miaWallace,straight02,straight01,straightAndStrand`"
 										alt="Customer Avatar"
 										class="rounded-circle me-3"
 										width="48"
@@ -176,8 +176,9 @@
 				(request) => request.status == "closed"
 			);
 			closedRequests.forEach((request) => {
+				console.log(request);
 				reviews.value.push({
-					customer: request.customer.username,
+					customer: request.customer,
 					date: request.date_of_completion,
 					content: request.review,
 				});
@@ -199,17 +200,3 @@
 		await Promise.all([fetchProfessionalDetails(), fetchReviews()]);
 	});
 </script>
-
-<style scoped>
-	.card {
-		border: none;
-		background-color: #fff;
-		border-radius: 18px;
-		box-shadow: 2px 4px 12px #00000014;
-		overflow: hidden;
-	}
-
-	.material-symbols-outlined {
-		font-variation-settings: "FILL" 1;
-	}
-</style>

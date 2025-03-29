@@ -1,5 +1,5 @@
 <template>
-	<div class="container-fluid p-5">
+	<div class="container py-5">
 		<!-- Dashboard Overview -->
 		<div v-if="$route.path === '/admin/dashboard'">
 			<h2 class="mb-5 display-5">Dashboard</h2>
@@ -141,9 +141,9 @@
 			</div>
 
 			<div v-if="pendingApprovals.length > 0">
-				<h2 class="mb-5">Pending Approvals</h2>
+				<h2 class="mb-3">Pending Approvals</h2>
 				<div
-					class="table-responsive mt-4 mb-5 shadow rounded px-3"
+					class="table-responsive mb-5 shadow rounded px-3"
 					style="background-color: #fff"
 				>
 					<table class="table text-center table-borderless">

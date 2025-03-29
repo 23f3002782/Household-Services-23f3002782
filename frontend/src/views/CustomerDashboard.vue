@@ -228,7 +228,7 @@
 						>
 							<div class="mb-4">
 								<img
-									src="https://api.dicebear.com/9.x/avataaars/svg?seed=Christopher&eyebrows=default&eyes=default&facialHair[]&facialHairColor[]&mouth=default&skinColor=edb98a&top=dreads01,dreads02,frida,frizzle,froBand,hat,miaWallace,shaggy,shaggyMullet,shavedSides,shortCurly,sides,straight02,straightAndStrand"
+									:src="img_src"
 									alt="Profile Avatar"
 									class="rounded-circle mb-3 border border-2 border-dark"
 									width="120"
@@ -386,6 +386,8 @@
 		email: authStore.user?.email || "",
 		address: authStore.user?.address || "",
 	});
+
+	const img_src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${authStore.user.id}&accessories[]&accessoriesColor[]&clothing=blazerAndShirt,blazerAndSweater,collarAndSweater,overall,shirtCrewNeck,shirtScoopNeck,hoodie,graphicShirt,shirtVNeck&eyebrows=default&eyes=default&facialHairColor=2c1b18,4a312c,a55728&hairColor=2c1b18,724133,a55728,b58143,d6b370,ecdcbf&hatColor[]&mouth=default&skinColor=d08b5b,ffdbb4,fd9841,edb98a&top=bigHair,bob,bun,curly,dreads,fro,longButNotTooLong,miaWallace,straight02,straight01,straightAndStrand`;
 
 	const originalProfile = ref({});
 

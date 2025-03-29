@@ -109,7 +109,7 @@
 		<section class="why-choose bg-light py-2 py-md-5">
 			<div class="container py-2 py-md-5">
 				<h2 class="text-center fw-bold mb-5 animate">
-					Why Choose Havenly
+					Why Choose Havenly ?
 				</h2>
 				<div class="row g-4 py-2 py-md-5">
 					<div
